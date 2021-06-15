@@ -2,6 +2,11 @@ package structures.basic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import commands.BasicCommands;
+import structures.GameState;
+import structures.Observer;
+
+import java.util.Map;
 
 /**
  * This is a representation of a Unit on the game board.
@@ -15,11 +20,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Dr. Richard McCreadie
  *
  */
-public class Unit {
+public class Unit extends Observer {
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
-	
+
+	private int health;
+	private int attack;
+
+	public void setAttack(int attack) {
+		this.attack = attack;
+	}
+
+	public void setHealth(int health) {
+		this.health = health;
+	}
+
 	int id;
 	UnitAnimationType animation;
 	Position position;
@@ -106,6 +122,16 @@ public class Unit {
 	public void setPositionByTile(Tile tile) {
 		position = new Position(tile.getXpos(),tile.getYpos(),tile.getTilex(),tile.getTiley());
 	}
-	
-	
+
+
+	@Override
+	public void trigger(Class target, Map<String,Object> parameters) {
+		if (this.getClass().equals(target) &&
+			Integer.parseInt((String) parameters.get("unitId")) == this.id){
+			if (parameters.get("type").equals("setUnit")){
+				BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
+				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
+			}
+		}
+	}
 }

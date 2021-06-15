@@ -1,6 +1,10 @@
 package structures.basic;
 
 
+import structures.Observer;
+
+import java.util.Map;
+
 /**
  * This is the base representation of a Card which is rendered in the player's hand.
  * A card has an id, a name (cardname) and a manacost. A card then has a large and mini
@@ -10,8 +14,9 @@ package structures.basic;
  * @author Dr. Richard McCreadie
  *
  */
-public class Card {
-	
+public class Card extends Observer{
+
+
 	int id;
 	
 	String cardname;
@@ -62,5 +67,10 @@ public class Card {
 		this.bigCard = bigCard;
 	}
 
-	
+
+	@Override
+	public void trigger(Class target, Map<String,Object> parameters) {
+		if (this.getClass().equals(target)){
+		}
+	}
 }

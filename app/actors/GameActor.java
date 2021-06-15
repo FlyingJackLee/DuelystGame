@@ -51,6 +51,7 @@ public class GameActor extends AbstractActor {
 
 		this.out = out; // save this, so we can send commands to the front-end later
 
+
 		// create class instances to respond to the various events that we might recieve
 		eventProcessors = new HashMap<String,EventProcessor>();
 		eventProcessors.put("initalize", new Initalize());
@@ -61,10 +62,16 @@ public class GameActor extends AbstractActor {
 		eventProcessors.put("cardclicked", new CardClicked());
 		eventProcessors.put("endturnclicked", new EndTurnClicked());
 		eventProcessors.put("otherclicked", new OtherClicked());
-		
+
+		// TODO
 		// Initalize a new game state object
-		gameState = new GameState();
-		
+		// gameState = new GameState();
+
+		//clear the singleton object
+		GameState.getInstance().clear();
+		gameState = GameState.getInstance();
+		gameState.setOut(out);
+
 		// Get the list of image files to pre-load the UI with
 		Set<String> images = ImageListForPreLoad.getImageListForPreLoad();
 		

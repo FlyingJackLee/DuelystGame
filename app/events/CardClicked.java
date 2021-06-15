@@ -4,7 +4,13 @@ package events;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
+import play.api.Play;
 import structures.GameState;
+import structures.basic.Card;
+import structures.basic.Player;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a card.
@@ -24,7 +30,12 @@ public class CardClicked implements EventProcessor{
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 		
 		int handPosition = message.get("position").asInt();
-		
+
+		Map<String,Object> parameters = new HashMap<>();
+		parameters.put("type","cardClick");
+		parameters.put("position",handPosition);
+
+		GameState.getInstance().broadcastEvent(Player.class,parameters);
 		
 	}
 

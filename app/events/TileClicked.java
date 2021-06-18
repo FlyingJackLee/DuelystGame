@@ -1,6 +1,5 @@
 package events;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
@@ -33,12 +32,9 @@ public class TileClicked implements EventProcessor{
 		int tiley = message.get("tiley").asInt();
 
 		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","clickUnit");
-		parameters.put("tilex",tilex);
-		parameters.put("tiley",tiley);
-
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
+		parameters.put("type", "tileClicked");
+		parameters.put("tilex", tilex);
+		parameters.put("tiley", tiley);
+		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 	}
-
 }

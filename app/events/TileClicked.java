@@ -39,6 +39,10 @@ public class TileClicked implements EventProcessor{
 
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
+
+		GameState.getInstance().getCurrentState().next(parameters);
+
+
 	}
 
 }

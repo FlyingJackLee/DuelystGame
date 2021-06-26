@@ -21,6 +21,11 @@ import java.util.Map;
  *
  */
 public class Unit extends Observer {
+	private Player owner;
+
+	public Player getOwner() {
+		return owner;
+	}
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -132,6 +137,7 @@ public class Unit extends Observer {
 				BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
 				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
 			}
-		}
+
+	}
 	}
 }

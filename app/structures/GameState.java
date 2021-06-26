@@ -2,6 +2,8 @@ package structures;
 
 import akka.actor.ActorRef;
 import events.EventProcessor;
+import state.State;
+import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 
@@ -17,6 +19,23 @@ import java.util.Map;
  *
  */
 public class GameState extends Subject {
+
+    private State currentState;
+
+    public State getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(State currentState) {
+        this.currentState = currentState;
+    }
+
+
+    private Player currentPlayer;
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
 
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
 

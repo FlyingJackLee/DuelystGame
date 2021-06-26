@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import commands.BasicCommands;
 import org.checkerframework.checker.guieffect.qual.UI;
+import state.CardClickedState;
 import structures.GameState;
 import structures.Observer;
 
@@ -177,8 +178,8 @@ public class Tile extends Observer {
 
 				Map<String, Object> newParameters;
 
-				int[] offsetx = new int[]{-1, 0, 0, 1,-2,-1,1,2,-1,0,1,0};
-				int[] offsety = new int[]{-1,-2,-1,-1, 0, 0,0,0, 1,1,1,2};
+				int[] offsetx = new int[]{-1, 0, 0, 1, -2, -1, 1, 2, -1, 0, 1, 0};
+				int[] offsety = new int[]{-1, -2, -1, -1, 0, 0, 0, 0, 1, 1, 1, 2};
 
 				for (int i = 0; i < offsety.length; i++) {
 
@@ -186,23 +187,34 @@ public class Tile extends Observer {
 					int newTileY = tiley + offsety[i];
 
 					if (newTileX >= 0 && newTileY >= 0) {
-							newParameters = new HashMap<>();
-							newParameters.put("type", "tileHighlight");
-							newParameters.put("tilex", newTileX);
-							newParameters.put("tiley", newTileY);
+						newParameters = new HashMap<>();
+						newParameters.put("type", "tileHighlight");
+						newParameters.put("tilex", newTileX);
+						newParameters.put("tiley", newTileY);
 
-							GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-						}
+						GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 					}
+				}
 
-			}
-
-			else if (parameters.get("type").equals("tileHighlight")) {
+			} else if (parameters.get("type").equals("tileHighlight")) {
 				BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
-			}
+			} else if (this.unitOnTile != null && parameters.get("type").equals("searchUnit")) {
+				if (
+						//if this is a enemy unit
+						(parameters.get("range").equals("enemy")
+						&& !this.unitOnTile.getOwner().equals(
+						GameState.getInstance().getCurrentPlayer()))
+						||
+								//or need all unit
+								parameters.get("range").equals("all")
+
+				) {
+					GameState.getInstance().getCurrentState().addValidTile(this);
+				}
+
 			}
 
 		}
 	}
-
+}
 

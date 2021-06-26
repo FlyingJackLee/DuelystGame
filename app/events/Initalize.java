@@ -122,6 +122,7 @@ public class Initalize implements EventProcessor{
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",7);
+		parameters.put("tilex",7);
 		parameters.put("tiley",2);
 		parameters.put("unit",AiAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);

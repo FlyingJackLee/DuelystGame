@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import events.EventProcessor;
 import structures.basic.Player;
 import structures.basic.Tile;
+import structures.basic.Unit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,17 @@ import java.util.Map;
 public class GameState extends Subject {
 
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
+    private State state; //The state variable is used to store current state
+    
+    public State getState() {
+		return state;
+	}
 
-    public void setOut(ActorRef out) {
+	public void setState(State state) {
+		this.state = state;
+	}
+
+	public void setOut(ActorRef out) {
         this.out = out;
     }
 
@@ -51,5 +61,5 @@ public class GameState extends Subject {
             observer.trigger(target,parameters);
         }
     }
-
+    
 }

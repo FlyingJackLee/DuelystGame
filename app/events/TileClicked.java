@@ -31,13 +31,18 @@ public class TileClicked implements EventProcessor{
 
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
-
 		Map<String,Object> parameters = new HashMap<>();
 		parameters.put("type","clickUnit");
 		parameters.put("tilex",tilex);
 		parameters.put("tiley",tiley);
-
+		
+		if(GameState.getInstance().getState().getStateName().equals("ReadyToAttack")) {
+			
+		}
+		
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		
+		
 
 	}
 

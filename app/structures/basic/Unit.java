@@ -76,6 +76,15 @@ public class Unit extends Observer {
 		this.correction = correction;
 	}
 
+	
+	public int getAttack() {
+		return attack;
+	}
+
+	public int getHealth() {
+		return health;
+	}
+
 	public int getId() {
 		return id;
 	}

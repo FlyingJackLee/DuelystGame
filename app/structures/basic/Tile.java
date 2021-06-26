@@ -12,6 +12,7 @@ import commands.BasicCommands;
 import org.checkerframework.checker.guieffect.qual.UI;
 import structures.GameState;
 import structures.Observer;
+import structures.State;
 
 /**
  * A basic representation of a tile on the game board. Tiles have both a pixel position
@@ -24,6 +25,7 @@ import structures.Observer;
 public class Tile extends Observer {
 
 	private Unit unitOnTile;
+//	private static Unit selectedUnit;
 
 	@JsonIgnore
 	private static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -149,6 +151,8 @@ public class Tile extends Observer {
 	 */
 	@Override
 	public void trigger(Class target, Map<String, Object> parameters) {
+		
+		State state = GameState.getInstance().getState();
 
 		if (this.getClass().equals(target)
 				&& (Integer) parameters.get("tilex") == this.tilex
@@ -174,7 +178,7 @@ public class Tile extends Observer {
 				}
 
 			} else if (parameters.get("type").equals("clickUnit") && this.unitOnTile != null) {
-
+				
 				Map<String, Object> newParameters;
 
 				int[] offsetx = new int[]{-1, 0, 0, 1,-2,-1,1,2,-1,0,1,0};
@@ -193,13 +197,14 @@ public class Tile extends Observer {
 
 							GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 						}
+					
 					}
-
 			}
-
+			
 			else if (parameters.get("type").equals("tileHighlight")) {
 				BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
 			}
+			
 			}
 
 		}

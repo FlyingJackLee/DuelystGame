@@ -49,6 +49,13 @@ public class Position {
 	public void setTiley(int tilexy) {
 		this.tiley = tilexy;
 	}
+
+	@Override
+	public String toString() {
+		return "Position [xpos=" + xpos + ", ypos=" + ypos + ", tilex=" + tilex + ", tiley=" + tiley + "]";
+	}
+	
+	
 	
 	
 	

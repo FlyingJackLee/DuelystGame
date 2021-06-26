@@ -32,7 +32,7 @@ public class Initalize implements EventProcessor{
 
 		//CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
-		//1. generate the tiles
+		// 1. generate the tiles
 		for (int i = 0; i < 9; i++) {
 			for (int j = 0; j < 5; j++) {
 				Tile tile = BasicObjectBuilders.loadTile(i,j);
@@ -65,6 +65,7 @@ public class Initalize implements EventProcessor{
 
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
+			card.setConfFiles(deck1Cards[i]);
 			humanPlayer.setDeck(card);
 			GameState.getInstance().add(card);
 		}
@@ -83,6 +84,7 @@ public class Initalize implements EventProcessor{
 		};
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
+			card.setConfFiles(deck2Cards[i]);
 			AIPlayer.setDeck(card);
 			GameState.getInstance().add(card);
 		}
@@ -101,10 +103,13 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
 
 		//4.creat avatar for both players
+//		Tile tile = BasicObjectBuilders.loadTile(1,2);
+//		humanPlayer.drawUnit(StaticConfFiles.humanAvatar, tile);
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.humanAvatar,
 				0,Unit.class
 		);
+//		GameState.getInstance().getUnitList().set(0, humanAvatar);
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
@@ -117,6 +122,7 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.aiAvatar,
 				1,Unit.class
 		);
+
 		GameState.getInstance().add(AiAvatar);
 
 		parameters = new HashMap<>();
@@ -130,6 +136,7 @@ public class Initalize implements EventProcessor{
 		//4.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
+		humanAvatar.setMaster(humanPlayer);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
 		parameters.put("unitId","0");
@@ -138,6 +145,7 @@ public class Initalize implements EventProcessor{
 		//4.2 set attack/health of AiAvatar
 		AiAvatar.setAttack(2);
 		AiAvatar.setHealth(20);
+		AiAvatar.setMaster(AIPlayer);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
 		parameters.put("unitId","1");
@@ -147,7 +155,8 @@ public class Initalize implements EventProcessor{
 
 		//6.human player draw 3 cards
 		parameters = new HashMap<>();
-		parameters.put("type","draw3Cards");
+		parameters.put("type","drawCard");
+		parameters.put("cardNum", "3");
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
 
 	}

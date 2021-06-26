@@ -25,6 +25,7 @@ import utils.BasicObjectBuilders;
 public class Tile extends Observer {
 
 	private Unit unitOnTile;
+	boolean isHighlight; // whether a tile is highlighted
 
 	@JsonIgnore
 	private static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -118,6 +119,24 @@ public class Tile extends Observer {
 	public void setTiley(int tiley) {
 		this.tiley = tiley;
 	}
+	
+	
+
+	public Unit getUnitOnTile() {
+		return unitOnTile;
+	}
+
+	public void setUnitOnTile(Unit unitOnTile) {
+		this.unitOnTile = unitOnTile;
+	}
+
+	public boolean isHighlight() {
+		return isHighlight;
+	}
+
+	public void setHighlight(boolean isHighlight) {
+		this.isHighlight = isHighlight;
+	}
 
 	/**
 	 * Loads a tile from a configuration file
@@ -145,49 +164,125 @@ public class Tile extends Observer {
 	 */
 	@Override
 	public void trigger(Class target, Map<String, Object> parameters) {
-		if (this.getClass().equals(target)
-				&& (Integer) parameters.get("tilex") == this.tilex
-				&& (Integer) parameters.get("tiley") == this.tiley) {
-			if (parameters.get("type").equals("summon")) {
-				Unit unit = (Unit) parameters.get("unit");
-				unit.setPositionByTile(this);
-				this.unitOnTile = unit;
-				// render front-end
-				BasicCommands.drawUnit(GameState.getInstance().getOut(), unit, this);
-				// wait for the creation of the unit
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			} else if (parameters.get("type").equals("tileClicked")) {
-				if (this.unitOnTile != null) {
-					Map<String, Object> newParameters;
-					//  the tiles that the unit can move to
-					int[] offsetx = new int[]{-2,-1,-1,-1, 0, 0, 0, 0, 1, 1, 1, 2};
-					int[] offsety = new int[]{ 0,-1, 0, 1,-2,-1, 1, 2,-1, 0, 1, 0};
-					for (int i = 0; i < offsety.length; i++) {
-						int newTileX = tilex + offsetx[i];
-						int newTileY = tiley + offsety[i];
-						if (newTileX >= 0 && newTileY >= 0) {
-							newParameters = new HashMap<>();
-							newParameters.put("type", "tileHighlight");
-							newParameters.put("tilex", newTileX);
-							newParameters.put("tiley", newTileY);
-							GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+		if (this.getClass().equals(target)){
+			if ((Integer) parameters.get("tilex") == this.tilex && (Integer) parameters.get("tiley") == this.tiley){
+				if (parameters.get("type").equals("summon")) {
+					Unit unit = (Unit) parameters.get("unit");
+					unit.setPositionByTile(this);
+					this.unitOnTile = unit;
+					// render front-end
+					BasicCommands.drawUnit(GameState.getInstance().getOut(), unit, this);
+					// wait for the creation of the unit
+					try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+				}			 
+				
+				else if(parameters.get("type").equals("tileClicked")) {
+					// if there is a unit on tile, record this unit and highlight
+					if(this.unitOnTile != null) {
+						this.moveHighlight(); 
+						GameState.getInstance().setTileClicked(this);;  // record the tile
+						GameState.getInstance().setUnitClicked(unitOnTile);  // record the unit					
+					}
+					else if (this.unitOnTile == null) {
+						// if the tile is movable, move to this tile
+						if (GameState.getInstance().getUnitClicked() != null && GameState.getInstance().getCardClicked() == null) {
+							if (this.isHighlight) {
+								unitOnTile = GameState.getInstance().getUnitClicked(); // set the unit on this tile
+								unitOnTile.moveToTile(this);
+								this.clearHighlight();
+								GameState.getInstance().getTileClicked().setUnitOnTile(null); // set the unit on origin tile "null"
+								GameState.getInstance().clearClicked();
+							}						
+						}
+						
+						// play a card to a tile
+						else if (GameState.getInstance().getCardClicked() != null && GameState.getInstance().getUnitClicked() == null) {
+							Card card = GameState.getInstance().getCardClicked();
+							GameState.getInstance().getCurrentPlayer().drawUnit(card,this);
+							
 						}
 					}
-				} else {
-					// de-highlight the board
-					for (int i = 0; i < 9; i++) {
-						for (int j = 0; j < 5; j++) {
-							BasicCommands.drawTile(GameState.getInstance().getOut(), BasicObjectBuilders.loadTile(i,j), 0);
-						}
-					}
+				}				
+				else if(parameters.get("type").equals("placeHighlight")) {
+					this.placeHighlight();
 				}
-			} else if (parameters.get("type").equals("tileHighlight")) {
-				BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
+				
+				// highlight the Avatar's movable tile
+				else if (parameters.get("type").equals("tileHighlight")) {
+					this.setHighlight(true);
+					BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
+				}
+				
+				// clear the highlight
+				else if (parameters.get("type").equals("clearHighlight")) {				
+					this.setHighlight(false);
+					BasicCommands.drawTile(GameState.getInstance().getOut(), this, 0);
+				}
 			}
 		}
+	}
+	 
+	// movable position
+	public void moveHighlight() {
+		Map<String, Object> newParameters;
+
+		int[] offsetx = new int[]{0,-2,-1,-1,-1, 0, 0, 0, 0, 1, 1, 1, 2};
+		int[] offsety = new int[]{0, 0,-1, 0, 1,-2,-1, 1, 2,-1, 0, 1, 0};
+
+		for (int i = 0; i < offsety.length; i++) {
+
+			int newTileX = tilex + offsetx[i];
+			int newTileY = tiley + offsety[i];
+
+			if (newTileX >= 0 && newTileY >= 0) {
+					newParameters = new HashMap<>();
+					newParameters.put("type", "tileHighlight");
+					newParameters.put("tilex", newTileX);
+					newParameters.put("tiley", newTileY);
+					
+					GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+			}
+		}
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+	}
+	
+	// placeable position
+	public void placeHighlight() {
+		Map<String, Object> newParameters;
+
+		int[] offsetx = new int[]{0,-1,-1,-1, 0, 0, 1, 1, 1};
+		int[] offsety = new int[]{0,-1, 0, 1,-1, 1,-1, 0, 1};
+
+		for (int i = 0; i < offsety.length; i++) {
+
+			int newTileX = tilex + offsetx[i];
+			int newTileY = tiley + offsety[i];
+
+			if (newTileX >= 0 && newTileY >= 0) {
+					newParameters = new HashMap<>();
+					newParameters.put("type", "tileHighlight");
+					newParameters.put("tilex", newTileX);
+					newParameters.put("tiley", newTileY);
+					
+					GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+			}
+		}
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+	}
+	
+	// clear highlight
+	public void clearHighlight() {	
+		Map<String, Object> newParameters;
+		for(int i = 0; i < 9; i++) {
+			for(int j = 0; j < 5; j++) {
+				newParameters = new HashMap<>();
+				newParameters.put("type", "clearHighlight");
+				newParameters.put("tilex", i);
+				newParameters.put("tiley", j);
+				
+				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+			}
+		}
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 	}
 }

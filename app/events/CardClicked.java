@@ -32,7 +32,7 @@ public class CardClicked implements EventProcessor{
 		int handPosition = message.get("position").asInt();
 
 		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","cardClick");
+		parameters.put("type","cardClicked");
 		parameters.put("position",handPosition);
 
 		GameState.getInstance().broadcastEvent(Player.class,parameters);

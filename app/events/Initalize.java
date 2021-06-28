@@ -30,26 +30,32 @@ public class Initalize implements EventProcessor{
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
-		//CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
+		// CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
-		//1. generate the tiles
+		// 1.generate tiles
 		for (int i = 0; i < 9; i++) {
 			for (int j = 0; j < 5; j++) {
-				Tile tile = BasicObjectBuilders.loadTile(i,j);
-				//register on gameState
+				Tile tile = BasicObjectBuilders.loadTile(i, j);
+				// register on gameState
 				GameState.getInstance().add(tile);
-				BasicCommands.drawTile(out,tile,0);
+				BasicCommands.drawTile(out, tile, 0);
 			}
 		}
 
-		//2.generate Players
+		// 2.generate Players
 		Player humanPlayer = new Player(20, 0);
 		Player AIPlayer = new AIPlayer(20, 0);
+
+		// register on gameState
+		GameState.getInstance().add(humanPlayer);
+		GameState.getInstance().add(AIPlayer);
 
 		BasicCommands.setPlayer1Health(out, humanPlayer);
 		BasicCommands.setPlayer2Health(out, AIPlayer);
 
-		//3.set the deck
+		BasicCommands.addPlayer1Notification(out, "Your turn", 2);
+
+		// 3.set the deck
 		String[] deck1Cards = {
 				StaticConfFiles.c_comodo_charger,
 				StaticConfFiles.c_hailstone_golem,
@@ -62,9 +68,8 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.c_truestrike,
 				StaticConfFiles.c_sundrop_elixir
 		};
-
 		for (int i = 0; i < 10; i++) {
-			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
+			Card card = BasicObjectBuilders.loadCard(deck1Cards[i], i, Card.class);
 			humanPlayer.setDeck(card);
 			GameState.getInstance().add(card);
 		}
@@ -82,76 +87,61 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.c_entropic_decay
 		};
 		for (int i = 0; i < 10; i++) {
-			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
+			Card card = BasicObjectBuilders.loadCard(deck2Cards[i], i+10, Card.class);
 			AIPlayer.setDeck(card);
 			GameState.getInstance().add(card);
 		}
 
-		//register the players on gameState
-		GameState.getInstance().add(humanPlayer);
-		GameState.getInstance().add(AIPlayer);
-
-
-		BasicCommands.addPlayer1Notification(out, "Your turn", 2);
-
-		//4.update the mana
+		// 4.update the mana
 		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","increaseMana");
-		parameters.put("mana","1");
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
+		parameters.put("type", "increaseMana");
+		parameters.put("mana", "1");
+		GameState.getInstance().broadcastEvent(Player.class, parameters);
 
-		//4.creat avatar for both players
+		// 5.creat avatar for both players
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.humanAvatar,
 				0,Unit.class
 		);
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",1);
-		parameters.put("tiley",2);
-		parameters.put("unit",humanAvatar);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		parameters.put("type", "summon");
+		parameters.put("tilex", 1);
+		parameters.put("tiley", 2);
+		parameters.put("unit", humanAvatar);
+		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
 		Unit AiAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.aiAvatar,
 				1,Unit.class
 		);
 		GameState.getInstance().add(AiAvatar);
-
 		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",7);
-		parameters.put("tiley",2);
-		parameters.put("unit",AiAvatar);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		parameters.put("type", "summon");
+		parameters.put("tilex", 7);
+		parameters.put("tiley", 2);
+		parameters.put("unit", AiAvatar);
+		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
-
-		//4.1 set attack/health of humanAvatar
+		// 5.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
 		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId","0");
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
+		parameters.put("type", "setUnit");
+		parameters.put("unitId", "0");
+		GameState.getInstance().broadcastEvent(Unit.class, parameters);
 
-		//4.2 set attack/health of AiAvatar
+		// 5.2 set attack/health of AiAvatar
 		AiAvatar.setAttack(2);
 		AiAvatar.setHealth(20);
 		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId","1");
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
+		parameters.put("type", "setUnit");
+		parameters.put("unitId", "1");
+		GameState.getInstance().broadcastEvent(Unit.class, parameters);
 
-
-
-		//6.human player draw 3 cards
+		// 6.human player draw 3 cards
 		parameters = new HashMap<>();
-		parameters.put("type","draw3Cards");
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
-
+		parameters.put("type", "draw3Cards");
+		GameState.getInstance().broadcastEvent(Player.class, parameters);
 	}
-
 }
-
-

@@ -19,9 +19,9 @@ import java.util.Random;
 public class Player extends Observer {
 
 	private List<Card> deck = new ArrayList<>();
-	private List<Card> cardsOnHand  = new ArrayList<>();;
+	private List<Card> cardsOnHand  = new ArrayList<>();
 
-	public void setDeck(Card ...cards){
+	public void setDeck(Card ...cards) {
 		for (Card card:cards) {
 			this.deck.add(card);
 		}
@@ -34,15 +34,15 @@ public class Player extends Observer {
 	 * @param  TODO
 	 * @return void TODO
 	 */
-	private void drawCard(){
+	private void drawCard() {
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
-		this.cardsOnHand.add(card);
-		BasicCommands.drawCard(GameState.getInstance().getOut(),
-				card,cardsOnHand.size()-1,0);
+		if (cardsOnHand.size() < 6) {
+			this.cardsOnHand.add(card);
+			BasicCommands.drawCard(GameState.getInstance().getOut(), card, cardsOnHand.size()-1, 0);
+		}
 	}
-
 
 	int health;
 	int mana;
@@ -68,15 +68,16 @@ public class Player extends Observer {
 	}
 	public void setMana(int mana) {
 		this.mana = mana;
-		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(),this);
+		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
 	}
 
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
-		if (this.getClass().equals(target)){
-			if (parameters.get("type").equals("increaseMana")){
+		if (this.getClass().equals(target)) {
+			if (parameters.get("type").equals("increaseMana")) {
 				this.setMana(mana + Integer.parseInt((String) parameters.get("mana")));
 			}
+
 			else if (parameters.get("type").equals("draw3Cards")) {
 				drawCard();
 				drawCard();
@@ -86,27 +87,26 @@ public class Player extends Observer {
 			else if (parameters.get("type").equals("cardClick")) {
 				int handPosition = (Integer) parameters.get("position");
 				highlightCardOnPosition(handPosition);
-
 			}
 
 			else if (parameters.get("type").equals("clearCardHighlight")) {
 				highlightCardOnPosition(-1);
+			}
 
+			else if (parameters.get("type").equals("endTurnClicked")) {
+				drawCard();
+				this.setMana(0);
 			}
 		}
 	}
-	private void highlightCardOnPosition(int position){
+
+	private void highlightCardOnPosition(int position) {
 		for (int i = 0; i < cardsOnHand.size(); i++) {
-			if (i == position){
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						cardsOnHand.get(i),i,1);
+			if (i == position) {
+				BasicCommands.drawCard(GameState.getInstance().getOut(), cardsOnHand.get(i), i, 1);
+			} else {
+				BasicCommands.drawCard(GameState.getInstance().getOut(), cardsOnHand.get(i), i, 0);
 			}
-			else{
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						cardsOnHand.get(i),i,0);
-			}
-
 		}
 	}
-
 }

@@ -66,55 +66,42 @@ public class Tile extends Observer {
 	public List<String> getTileTextures() {
 		return tileTextures;
 	}
-
 	public void setTileTextures(List<String> tileTextures) {
 		this.tileTextures = tileTextures;
 	}
-
 	public int getXpos() {
 		return xpos;
 	}
-
 	public void setXpos(int xpos) {
 		this.xpos = xpos;
 	}
-
 	public int getYpos() {
 		return ypos;
 	}
-
 	public void setYpos(int ypos) {
 		this.ypos = ypos;
 	}
-
 	public int getWidth() {
 		return width;
 	}
-
 	public void setWidth(int width) {
 		this.width = width;
 	}
-
 	public int getHeight() {
 		return height;
 	}
-
 	public void setHeight(int height) {
 		this.height = height;
 	}
-
 	public int getTilex() {
 		return tilex;
 	}
-
 	public void setTilex(int tilex) {
 		this.tilex = tilex;
 	}
-
 	public int getTiley() {
 		return tiley;
 	}
-
 	public void setTiley(int tiley) {
 		this.tiley = tiley;
 	}
@@ -160,7 +147,9 @@ public class Tile extends Observer {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			} else if (parameters.get("type").equals("tileClicked")) {
+			}
+
+			else if (parameters.get("type").equals("tileClicked")) {
 				if (this.unitOnTile != null) {
 					Map<String, Object> newParameters;
 					//  the tiles that the unit can move to
@@ -181,11 +170,13 @@ public class Tile extends Observer {
 					// de-highlight the board
 					for (int i = 0; i < 9; i++) {
 						for (int j = 0; j < 5; j++) {
-							BasicCommands.drawTile(GameState.getInstance().getOut(), BasicObjectBuilders.loadTile(i,j), 0);
+							BasicCommands.drawTile(GameState.getInstance().getOut(), BasicObjectBuilders.loadTile(i, j), 0);
 						}
 					}
 				}
-			} else if (parameters.get("type").equals("tileHighlight")) {
+			}
+
+			else if (parameters.get("type").equals("tileHighlight")) {
 				BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
 			}
 		}

@@ -21,12 +21,16 @@ import java.util.Map;
  *
  */
 public class Unit extends Observer {
+	private Player owner;
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
 	private int health;
 	private int attack;
+	
+	boolean hasAttacked = false;
+	boolean hasMoved = false;
 
 	public void setAttack(int attack) {
 		this.attack = attack;
@@ -122,6 +126,15 @@ public class Unit extends Observer {
 		this.animations = animations;
 	}
 	
+	
+	public Player getOwner() {
+		return owner;
+	}
+
+	public void setOwner(Player owner) {
+		this.owner = owner;
+	}
+
 	/**
 	 * This command sets the position of the Unit to a specified
 	 * tile.

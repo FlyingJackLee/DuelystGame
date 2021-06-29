@@ -38,6 +38,7 @@ public class Initalize implements EventProcessor{
 				Tile tile = BasicObjectBuilders.loadTile(i,j);
 				//register on gameState
 				GameState.getInstance().add(tile);
+				GameState.getInstance().getTileList().add(tile);
 				BasicCommands.drawTile(out,tile,0);
 			}
 		}

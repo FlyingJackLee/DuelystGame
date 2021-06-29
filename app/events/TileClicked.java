@@ -24,31 +24,27 @@ import java.util.Map;
  *
  */
 public class TileClicked implements EventProcessor{
-
+	
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
 		Map<String,Object> parameters = new HashMap<>();
-<<<<<<< HEAD
-		parameters.put("type","clickUnit");
+		
+		//Store the coordinate in parameters.
 		parameters.put("tilex",tilex);
 		parameters.put("tiley",tiley);
 		
-		if(GameState.getInstance().getState().getStateName().equals("ReadyToAttack")) {
-			
+		if(GameState.getInstance().getState().equals("readyState")) {
+			parameters.put("type", "tileClicked");
+		}else if(GameState.getInstance().getState().equals("unitClicked")) {
+			parameters.put("type", "action");
+		}else if(GameState.getInstance().getState().equals("cardClicked")) {
+			parameters.put("type", "summon");
 		}
 		
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-		
-		
-
-=======
-		parameters.put("type", "tileClicked");
-		parameters.put("tilex", tilex);
-		parameters.put("tiley", tiley);
 		GameState.getInstance().broadcastEvent(Tile.class, parameters);
->>>>>>> d186ff6ce9e7f7526377356e683b15d9a86e652b
+
 	}
 }

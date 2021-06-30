@@ -21,10 +21,29 @@ import java.util.Map;
  *
  */
 public class Unit extends Observer {
+
+
+	enum UnitState{
+		//the unit is ready after the next turn of summon
+		//TODO: switch in turn change
+		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
+
+	}
+
+	private UnitState currentState= UnitState.NOT_READY;
+
+	public void setCurrentState(UnitState currentState) {
+		this.currentState = currentState;
+	}
+
 	private Player owner;
 
 	public Player getOwner() {
 		return owner;
+	}
+
+	public void setOwner(Player owner) {
+		this.owner = owner;
 	}
 
 	@JsonIgnore

@@ -105,6 +105,8 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.humanAvatar,
 				0,Unit.class
 		);
+
+		humanAvatar.setOwner(humanPlayer);
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
@@ -119,6 +121,7 @@ public class Initalize implements EventProcessor{
 		);
 		GameState.getInstance().add(AiAvatar);
 
+		AiAvatar.setOwner(AIPlayer);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",7);
@@ -145,6 +148,8 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
+		//5.set player
+		GameState.getInstance().setCurrentPlayer(humanPlayer);
 
 		//6.human player draw 3 cards
 		parameters = new HashMap<>();

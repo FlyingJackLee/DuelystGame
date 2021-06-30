@@ -1,8 +1,8 @@
 package structures;
 
 import akka.actor.ActorRef;
+import commands.BasicCommands;
 import events.EventProcessor;
-import state.State;
 import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
@@ -20,15 +20,30 @@ import java.util.Map;
  */
 public class GameState extends Subject {
 
-    private State currentState;
 
-    public State getCurrentState() {
+    public enum CurrentState{
+        READY,CARD_SELECT,UNIT_SELECT
+    }
+
+    private CurrentState currentState = CurrentState.READY;
+
+
+
+    public CurrentState getCurrentState() {
         return currentState;
     }
 
-    public void setCurrentState(State currentState) {
+    public void setCurrentState(CurrentState currentState) {
         this.currentState = currentState;
     }
+
+
+    private Card cardSelected = null;
+
+    public void setCardSelected(Card cardSelected) {
+        this.cardSelected = cardSelected;
+    }
+
 
 
     private Player currentPlayer;
@@ -36,6 +51,11 @@ public class GameState extends Subject {
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
 
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
 
@@ -70,5 +90,8 @@ public class GameState extends Subject {
             observer.trigger(target,parameters);
         }
     }
+
+
+
 
 }

@@ -35,8 +35,8 @@ public class CardClicked implements EventProcessor{
 		parameters.put("type","cardClick");
 		parameters.put("position",handPosition);
 
-		GameState.getInstance().getCurrentState().next(parameters);
-
+		GameState.getInstance().broadcastEvent(Player.class,parameters);
+		GameState.getInstance().setCurrentState(GameState.CurrentState.CARD_SELECT);
 
 	}
 

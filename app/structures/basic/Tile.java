@@ -194,6 +194,7 @@ public class Tile extends Observer {
 							this.moveHighlight();
 						}
 						// if the unit has moved, it can't move but can attack, only highlight attack unit
+						// READY_ATTACK state is only set for the unit that have moved and want to attack
 						if(this.unitOnTile.getCurrentState().equals(Unit.UnitState.HAS_MOVED)){
 							GameState.getInstance().setTileSelected(this);
 							GameState.getInstance().setCurrentState(GameState.CurrentState.UNIT_SELECT);
@@ -238,6 +239,7 @@ public class Tile extends Observer {
 							try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 						}
 					}
+					// if a unit want to move and attack, use this logic
 					if(unit.getCurrentState().equals(Unit.UnitState.READY_ATTACK)){
 						if (this.tileState.equals(tileState.RED)){
 							unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
@@ -252,7 +254,6 @@ public class Tile extends Observer {
 					if (this.unitOnTile == null) {
 						this.setTileState(tileState.WHITE);
 						this.attackHighlight(); // set the move and attack position
-						try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 					}
 				}
 				else if (parameters.get("type").equals("attackHighlight")) {
@@ -260,12 +261,10 @@ public class Tile extends Observer {
 					if (this.unitOnTile != null &&
 							!this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
 						this.setTileState(tileState.RED);
-						try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 					}
 				}
 				else if (parameters.get("type").equals("clearHighlight")){
 					this.setTileState(tileState.NORMAL);
-					try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 				}
 				else if (parameters.get("type").equals("summon")) {
 					Unit unit = (Unit) parameters.get("unit");

@@ -1,8 +1,12 @@
 package structures;
 
 import akka.actor.ActorRef;
+import commands.BasicCommands;
 import events.EventProcessor;
-import structures.basic.*;
+import structures.basic.Card;
+import structures.basic.Player;
+import structures.basic.Tile;
+import structures.basic.Unit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,16 +21,50 @@ import java.util.Map;
  */
 public class GameState extends Subject {
 
+
+    public enum CurrentState{
+        READY,CARD_SELECT,UNIT_SELECT
+    }
+
+    private CurrentState currentState = CurrentState.READY;
+
+
+    public CurrentState getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(CurrentState currentState) {
+        this.currentState = currentState;
+    }
+
+
+    private Card cardSelected = null;
+
+    public void setCardSelected(Card cardSelected) {
+        this.cardSelected = cardSelected;
+    }
+
+
+    private Tile tileSelected = null;
+
+    public void setTileSelected(Tile tileSelected) { this.tileSelected = tileSelected; }
+    public Tile getTileSelected() { return tileSelected; }
+
+
+
+    private Player currentPlayer;
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
 
-    private Unit unitClicked;
-    private Tile tileClicked;
-    private Card cardClicked;
-    private List<Player> playerList = new ArrayList<Player>();
-    private Player currentPlayer;
-    private int currentTurn;
-    List<Unit> unitList;
-    
     public void setOut(ActorRef out) {
         this.out = out;
     }
@@ -41,13 +79,15 @@ public class GameState extends Subject {
     public static GameState getInstance(){
         return instance;
     }
-    
-//    public void add(Player player) {
-//    	playerList.add(player);
-//    }
 
     private GameState(){
 
+    }
+
+    public void setStateReady(){
+        this.setCurrentState(currentState.READY);
+        this.setCardSelected(null);
+        this.setTileSelected(null);
     }
 
     public void clear(){
@@ -56,54 +96,14 @@ public class GameState extends Subject {
         this.out = null;
     }
 
-	public Unit getUnitClicked() {
-		return unitClicked;
-	}
-
-	public void setUnitClicked(Unit unitClicked) {
-		this.unitClicked = unitClicked;
-	}
-
-	public Tile getTileClicked() {
-		return tileClicked;
-	}
-
-	public void setTileClicked(Tile tileClicked) {
-		this.tileClicked = tileClicked;
-	}
-
-	public Card getCardClicked() {
-		return cardClicked;
-	}
-
-	public void setCardClicked(Card cardClicked) {
-		this.cardClicked = cardClicked;
-	}
-
-	public Player getCurrentPlayer() {
-		return currentPlayer;
-	}
-
-//	public void setCurrentPlayer(int n) {
-//		this.currentPlayer = playerList.get(n);
-//	}
-
-	public void clearClicked() {
-		unitClicked = null;
-		tileClicked = null;
-		cardClicked = null;
-	}
-	
-
-	public List<Unit> getUnitList() {
-		return unitList;
-	}
-
-	@Override
+    @Override
     public void broadcastEvent(Class target, Map<String,Object> parameters){
         for (Observer observer:observers){
             observer.trigger(target,parameters);
         }
     }
+
+
+
 
 }

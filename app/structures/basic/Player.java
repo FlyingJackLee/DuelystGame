@@ -1,17 +1,13 @@
 package structures.basic;
 
+import akka.util.Helpers;
 import commands.BasicCommands;
+import org.ietf.jgss.GSSManager;
 import structures.GameState;
 import structures.Observer;
-import utils.BasicObjectBuilders;
-import utils.StaticConfFiles;
+import utils.ToolBox;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
+import java.util.*;
 
 /**
  * A basic representation of of the Player. A player
@@ -23,7 +19,31 @@ import java.util.Random;
 public class Player extends Observer {
 
 	private List<Card> deck = new ArrayList<>();
-	private List<Card> cardsOnHand  = new ArrayList<>();
+	private List<Card> cardsOnHand  = new ArrayList<>();;
+
+	public void setDeck(Card ...cards){
+		for (Card card:cards) {
+			this.deck.add(card);
+		}
+	}
+
+	/*
+	 *
+	 * TODO
+	 *
+	 * @param  TODO
+	 * @return void TODO
+	 */
+	private void drawCard(){
+		int randomInt = new Random().nextInt(deck.size());
+		Card card = this.deck.get(randomInt);
+		this.deck.remove(card);
+		this.cardsOnHand.add(card);
+		BasicCommands.drawCard(GameState.getInstance().getOut(),
+				card,cardsOnHand.size()-1,0);
+	}
+
+
 	int health;
 	int mana;
 	
@@ -37,7 +57,6 @@ public class Player extends Observer {
 		this.health = health;
 		this.mana = mana;
 	}
-	
 	public int getHealth() {
 		return health;
 	}
@@ -51,22 +70,6 @@ public class Player extends Observer {
 		this.mana = mana;
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(),this);
 	}
-	public List<Card> getDeck() {
-		return deck;
-	}
-
-	public List<Card> getCardsOnHand() {
-		return cardsOnHand;
-	}
-	public void setCardsOnHand(List<Card> cardsOnHand) {
-		this.cardsOnHand = cardsOnHand;
-	}
-
-	public void setDeck(Card ...cards){
-		for (Card card:cards) {
-			this.deck.add(card);
-		}
-	}
 
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
@@ -74,83 +77,129 @@ public class Player extends Observer {
 			if (parameters.get("type").equals("increaseMana")){
 				this.setMana(mana + Integer.parseInt((String) parameters.get("mana")));
 			}
-			else if (parameters.get("type").equals("drawCard")) {
-				int num = Integer.parseInt(parameters.get("cardNum").toString());
-				drawCard(num);
+			else if (parameters.get("type").equals("draw3Cards")) {
+				drawCard();
+				drawCard();
+				drawCard();
 			}
-			else if (parameters.get("type").equals("cardClicked")) {
-				// 找到card，高亮card
-				GameState.getInstance().getCardClicked().cardHighlight(health);
-				int handPosition = (Integer) parameters.get("position");
-				Card card = cardsOnHand.get(handPosition);
-				card.cardHighlight(handPosition);
-				// 把card存进GameState
-				GameState.getInstance().setCardClicked(cardsOnHand.get(handPosition));
-				// 找到可放置位置
-				Unit unit = GameState.getInstance().getUnitList().get(0);
-				parameters.put("type", "placeHighlight");
-				parameters.put("tilex",unit.getPosition().getTilex());
-				parameters.put("tiley", unit.getPosition().getTiley());
-				GameState.getInstance().broadcastEvent(Tile.class, parameters);
-			}
-		}
-	}
-	
-	/*
-	 *
-	 * TODO
-	 *
-	 * @param  TODO
-	 * @return void TODO
-	 */
-	private void drawCard(int n){
-		for(int i = 1; i <= n; i++) {
-			int randomInt = new Random().nextInt(deck.size());
-			Card card = this.deck.get(randomInt);
-			if(cardsOnHand.size() <= 6) {
-				this.deck.remove(card);
-				this.cardsOnHand.add(card);
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						card,cardsOnHand.size()-1,0);
-			}
-			else {
-				this.deck.remove(card);
-			}
-		}
-	}
-	
-//	private void cardHighlight(int position){
-//		for (int i = 0; i < cardsOnHand.size(); i++) {
-//			if (i == position){
-//				BasicCommands.drawCard(GameState.getInstance().getOut(),
-//						cardsOnHand.get(i),i,1);				
-//			}
-//			else{
-//				BasicCommands.drawCard(GameState.getInstance().getOut(),
-//						cardsOnHand.get(i),i,0);
-//			}
-//		}
-//	}
-	
-	public void drawUnit(Card card, Tile tile) {
-		Map<String,Object> parameters = new HashMap<>();
-		int unitId = GameState.getInstance().getUnitList().size(); // 获取全场unit总数
-		String confFile = card.getConfFiles();
-		Unit unit = BasicObjectBuilders.loadUnit(confFile,unitId,Unit.class); // 生成新的unit
-		GameState.getInstance().getUnitList().add(unit); // 在Game State里记录的unit列表加上这个unit
-		unit.setMaster(this); // 给unit打标，说明unit属于这个玩家
-		unit.setAttack(card.getBigCard().getAttack()); // 设置攻击
-		unit.setHealth(card.getBigCard().getHealth()); // 设置血量
-		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",tile.getTilex());
-		parameters.put("tiley", tile.getTiley());
-		parameters.put("unit",unit);
-		
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-	}
-		
-	
 
+			else if (parameters.get("type").equals("cardClick")) {
+				int handPosition = (Integer) parameters.get("position");
+				//if the player has enough mana
+				if(cardsOnHand.get(handPosition).getManacost() <= this.mana){
+					//highlight card
+					cardSelected(handPosition);
+					//highlight valid tiles
+					showValidRange(handPosition);
+
+					//store the card into gameState
+					GameState.getInstance().setCardSelected(cardsOnHand.get(handPosition));
+				}
+				else {
+					ToolBox.logNotification("Mana not enough");
+				}
+
+			}
+
+			else if (parameters.get("type").equals("cardSelectedReset")) {
+				cardSelected(-1);
+			}
+			else if (parameters.get("type").equals("cardApplied")) {
+
+			}
+		}
+	}
+
+
+	/**
+	 *
+	 * set the card selected
+	 *
+	 * @param position:  0 ~ 6( at specific position), or -1(reset selected)
+	 */
+	private void cardSelected(int position){
+
+		for (int i = 0; i < cardsOnHand.size(); i++) {
+			if (i == position){
+				BasicCommands.drawCard(GameState.getInstance().getOut(),
+						cardsOnHand.get(i),i,1);
+				GameState.getInstance().setCardSelected(cardsOnHand.get(i));
+			}
+			else{
+				BasicCommands.drawCard(GameState.getInstance().getOut(),
+						cardsOnHand.get(i),i,0);
+				GameState.getInstance().setCardSelected(null);
+
+			}
+
+
+		}
+	}
+
+
+	private void showValidRange(int position){
+		Map<String,Object> parameters = new HashMap<>();
+
+		parameters.put("type","textureReset");
+		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		//waiting for completion of reset
+		try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
+
+
+		Card cardSelected = this.cardsOnHand.get(position);
+
+
+		//Calculate the target range of card
+		//if it is a spell
+		if (cardSelected.isCreatureOrSpell() == -1){
+			String rule = cardSelected.getBigCard().getRulesTextRows()[0];
+
+			//if the target is a unit
+			if (rule.contains("unit")){
+				parameters = new HashMap<>();
+				parameters.put("type","searchUnit");
+
+				//find all enemy Unit
+				if (rule.contains("enemy")){
+					parameters.put("range","enemy");
+
+					//ask the tileS to give the list of enemy units and highlight them.
+					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+				}
+				//find all  Unit
+				else {
+					parameters.put("range","all");
+					//ask the tileS to give the list of all units and highlight them.
+					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+				}
+			}
+
+			//if the target is a avatar
+			else if (rule.contains("avatar")) {
+				parameters = new HashMap<>();
+				parameters.put("type","searchUnit");
+
+				//find all non avatar
+				//TODO
+				if (rule.contains("non-avatar")){
+					parameters.put("range","non-avatar");
+					//ask the tile to give the list of enemy units
+					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+				}
+			}
+		}
+		//if it is a creature
+		else {
+			parameters = new HashMap<>();
+			parameters.put("type","validSummonRangeHighlight");
+
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		}
+
+
+	}
 
 }

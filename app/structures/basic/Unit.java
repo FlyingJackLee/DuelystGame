@@ -2,13 +2,10 @@ package structures.basic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import akka.actor.ActorRef;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,6 +21,31 @@ import java.util.Map;
  *
  */
 public class Unit extends Observer {
+
+
+	enum UnitState{
+		//the unit is ready after the next turn of summon
+		//TODO: switch in turn change
+		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
+
+	}
+
+	private UnitState currentState= UnitState.NOT_READY;
+
+	public void setCurrentState(UnitState currentState) {
+		this.currentState = currentState;
+	}
+
+	private Player owner;
+
+	public Player getOwner() {
+		return owner;
+	}
+	public void setOwner(Player owner) {
+		this.owner = owner;
+	}
+
+	private int remainMoveTimes;
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -44,11 +66,10 @@ public class Unit extends Observer {
 	Position position;
 	UnitAnimationSet animations;
 	ImageCorrection correction;
-	Player master;
 	
 	public Unit() {}
 	
-	public Unit(ActorRef out, int id, UnitAnimationSet animations, ImageCorrection correction) {
+	public Unit(int id, UnitAnimationSet animations, ImageCorrection correction) {
 		super();
 		this.id = id;
 		this.animation = UnitAnimationType.idle;
@@ -116,15 +137,7 @@ public class Unit extends Observer {
 	public void setAnimations(UnitAnimationSet animations) {
 		this.animations = animations;
 	}
-
-	public Player getMaster() {
-		return master;
-	}
-
-	public void setMaster(Player master) {
-		this.master = master;
-	}
-
+	
 	/**
 	 * This command sets the position of the Unit to a specified
 	 * tile.
@@ -138,22 +151,14 @@ public class Unit extends Observer {
 
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
-		if (this.getClass().equals(target)) {
-			int pid = Integer.parseInt(parameters.get("unitId").toString());
-			if(pid == this.id){
-				if (parameters.get("type").equals("setUnit")){
-					BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
-					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
-			    }
-			}		
-		}		
+		if (this.getClass().equals(target) &&
+			Integer.parseInt((String) parameters.get("unitId")) == this.id){
+			if (parameters.get("type").equals("setUnit")){
+				BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
+				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
+			}
+
 	}
-	
-	// move the unit to the tile, and set the tile's unit
-	public void moveToTile(Tile t) {		
-		BasicCommands.moveUnitToTile(GameState.getInstance().getOut(),this, t);
-		this.setPositionByTile(t);
-		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+
 	}
-	
 }

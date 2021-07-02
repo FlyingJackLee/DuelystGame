@@ -3,13 +3,10 @@ package structures.basic;
 
 import structures.GameState;
 import structures.Observer;
+import utils.BasicObjectBuilders;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-
-import commands.BasicCommands;
-
-
 
 /**
  * This is the base representation of a Card which is rendered in the player's hand.
@@ -22,16 +19,13 @@ import commands.BasicCommands;
  */
 public class Card extends Observer{
 
-
-    int id;
+	int id;
 	
 	String cardname;
 	int manacost;
 	
 	MiniCard miniCard;
 	BigCard bigCard;
-	String confFiles;
-	boolean isHighlight;
 	
 	public Card() {};
 	
@@ -73,54 +67,26 @@ public class Card extends Observer{
 	}
 	public void setBigCard(BigCard bigCard) {
 		this.bigCard = bigCard;
-	}	
-
-	public String getConfFiles() {
-		return confFiles;
 	}
 
-	public void setConfFiles(String confFiles) {
-		this.confFiles = confFiles;
-	}
-
-	public boolean isHighlight() {
-		return isHighlight;
-	}
-
-	public void setHighlight(boolean isHighlight) {
-		this.isHighlight = isHighlight;
-	}
 
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
 		if (this.getClass().equals(target)){
-//			int handPosition = (Integer) parameters.get("position");
-//			if(GameState.getInstance().getCurrentPlayer().getCardsOnHand().get(handPosition).getId() == this.id) {
-//				if(parameters.get("type").equals("cardClicked")) {
-//					cardHighlight(handPosition);
-//				}
-//			}
-//			if(parameters.get("type").equals("cardClicked")) {
-//				int handPosition = (Integer) parameters.get("position");
-//				int cardId = GameState.getInstance().getCurrentPlayer().getCardsOnHand().get(handPosition).getId();
-//				if(cardId == this.id) {
-//					int uid = 0;
-//					parameters.put("type", "findAvatar");
-//					parameters.put("unitId", uid);
-//					GameState.getInstance().broadcastEvent(Tile.class, parameters);
-//				}
-//			}
 		}
 	}
-	
-	public void cardHighlight(int position){
-		if(this.isHighlight) {
-			this.setHighlight(false);
-			BasicCommands.drawCard(GameState.getInstance().getOut(), this,position,0);			
-		}else {
-			this.setHighlight(true);
-			BasicCommands.drawCard(GameState.getInstance().getOut(), this,position,1);			
+
+	public int isCreatureOrSpell(){
+
+		//if it is a spell
+		if (this.getBigCard().getAttack() == -1){
+			return -1;
 		}
-		
+		//if it is a creature
+		else {
+			return 1;
+		}
 	}
+
+
 }

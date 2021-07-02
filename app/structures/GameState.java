@@ -84,9 +84,10 @@ public class GameState extends Subject {
 
     }
 
+    // After move or attack, clear the selected tile, and switch the current state
     public void setStateReady(){
         this.setCurrentState(currentState.READY);
-        this.setCardSelected(null);
+        this.tileSelected.clearAllHighlight();
         this.setTileSelected(null);
     }
 

@@ -26,15 +26,18 @@ public class Unit extends Observer {
 	enum UnitState{
 		//the unit is ready after the next turn of summon
 		//TODO: switch in turn change
-		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
+		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED,READY_ATTACK
 
 	}
+
 
 	private UnitState currentState= UnitState.NOT_READY;
 
 	public void setCurrentState(UnitState currentState) {
 		this.currentState = currentState;
 	}
+	public UnitState getCurrentState() { return currentState;}
+
 
 	private Player owner;
 
@@ -45,7 +48,12 @@ public class Unit extends Observer {
 		this.owner = owner;
 	}
 
-	private int remainMoveTimes;
+
+	private int remainAttackTime = 1;
+	public int getRemainAttackTime() {return remainAttackTime;}
+	public void setRemainAttackTime(int remainAttackTime) {	this.remainAttackTime = remainAttackTime;}
+
+
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file

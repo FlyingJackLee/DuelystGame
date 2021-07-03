@@ -1,10 +1,7 @@
 package structures.basic;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,13 +32,22 @@ public class Tile extends Observer {
 		}
 	}
 
+	public Set<Tile> getAroundTiles() {
+		return aroundTiles;
+	}
 
-	private List<Object> originMoveableTiles = new ArrayList<>();
+	private Set<Tile> aroundTiles = new HashSet<>();
 
-	private List<Object> originAttackableTiles = new ArrayList<>();
 
-	public List<Object> getOriginMoveableTiles() {return originMoveableTiles;}
-	public List<Object> getOriginAttackableTiles() {return originAttackableTiles;}
+
+	private Set<Tile> originMoveableTiles = new HashSet<>();
+	public Set<Tile> getOriginMoveableTiles() { return originMoveableTiles;	}
+
+
+
+	public TileState getTileState() {
+		return tileState;
+	}
 
 	private TileState tileState = TileState.NORMAL;
 
@@ -205,6 +211,7 @@ public class Tile extends Observer {
 							unitOnTile.setCurrentState(Unit.UnitState.READY_ATTACK);
 
 							this.attackHighlight();
+
 						}
 					}
 				}
@@ -227,18 +234,31 @@ public class Tile extends Observer {
 							unit.setCurrentState(Unit.UnitState.HAS_MOVED);
 							// move
 							this.move(unit);
-
+							GameState.getInstance().setStateReady();
 						}
 						// if tile is red, and the unit state is READY
+						// 这里会有两种情况： 1、目标对象在可直接攻击范围内 2、目标对象在可直接攻击范围外（攻击范围通过方法distanceOfTiles 判断）
 						if (this.tileState.equals(tileState.RED)){
-							unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
-							GameState.getInstance().setStateReady();
-							// only attack
-							attack(unit,this.unitOnTile);
-
+							if(distanceOfTiles(GameState.getInstance().getTileSelected(),this) <= 2){
+								unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
+								GameState.getInstance().setStateReady();
+								// only attack
+								attack(unit,this.unitOnTile);
+							}
+							else{
+								for(Tile x : GameState.getInstance().getTileSelected().getOriginMoveableTiles()){
+									if(x.getTileState().equals(TileState.WHITE) && distanceOfTiles(x,this) <= 2){
+										x.move(unit);
+										unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
+										GameState.getInstance().setStateReady();
+										attack(unit,this.unitOnTile);
+										break;
+									}
+								}
+							}
 						}
 					}
-					// if a unit want to move and attack, use this logic
+					// if a unit want to move, then attack, or attack twice, use this logic
 					if(unit.getCurrentState().equals(Unit.UnitState.READY_ATTACK)){
 						if (this.tileState.equals(tileState.RED)){
 							unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
@@ -249,14 +269,14 @@ public class Tile extends Observer {
 
 				}
 				else if (parameters.get("type").equals("moveHighlight")) {
-					GameState.getInstance().getTileSelected().getOriginMoveableTiles().add(this);
 					if (this.unitOnTile == null) {
+						GameState.getInstance().getTileSelected().getOriginMoveableTiles().add(this);
 						this.setTileState(tileState.WHITE);
 						this.attackHighlight(); // set the move and attack position
+//						this.getAroundTiles(); // 获取十字形周围
 					}
 				}
 				else if (parameters.get("type").equals("attackHighlight")) {
-					GameState.getInstance().getTileSelected().getOriginAttackableTiles().add(this);
 					// if the unit is enemy unit, highlight the tile to red
 					if (this.unitOnTile != null &&
 							!this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
@@ -279,6 +299,10 @@ public class Tile extends Observer {
 				else if (parameters.get("type").equals("unitDead")){
 					this.setUnitOnTile(null);
 				}
+//				else if (parameters.get("type").equals("storeAroundTiles")){
+//					Tile tile = (Tile)parameters.get("tile");
+//					tile.getAroundTiles().add(tile);
+//				}
 			}
 		}
 	}
@@ -411,8 +435,8 @@ public class Tile extends Observer {
 	public void moveHighlight() {
 		Map<String, Object> newParameters;
 
-		int[] offsetx = new int[]{0,-2,-1,-1,-1, 0, 0, 0, 0, 1, 1, 1, 2};
-		int[] offsety = new int[]{0, 0,-1, 0, 1,-2,-1, 1, 2,-1, 0, 1, 0};
+		int[] offsetx = new int[]{ 1, 1,-1,-1, 0, 0, 2,-2, 0, 0, 1,-1};
+		int[] offsety = new int[]{ 1,-1, 1,-1, 2,-2, 0, 0, 1,-1, 0, 0};
 
 		for (int i = 0; i < offsetx.length; i++) {
 
@@ -481,9 +505,41 @@ public class Tile extends Observer {
 		BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
 		this.setUnitOnTile(unit);
 		GameState.getInstance().getTileSelected().setUnitOnTile(null);
-		GameState.getInstance().setStateReady();
-		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+		try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
 	}
 
+	// calculate the distance of two tiles
+	public int distanceOfTiles(Tile tile1, Tile tile2){
+		int x_1 = tile1.getTilex();
+		int y_1 = tile1.getTiley();
+		int x_2 = tile2.getTilex();
+		int y_2 = tile2.getTiley();
+		int distance = (x_1 - x_2) * (x_1 - x_2) + (y_1 - y_2) * (y_1 - y_2);
+		return distance;
+	}
+
+	// 计算tile上下左右四个点
+//	public void aroundTiles(Tile tile){
+//		Map<String, Object> newParameters;
+//
+//		int[] offsetx = new int[]{ 0, 0, 1,-1};
+//		int[] offsety = new int[]{ 1,-1, 0, 0};
+//
+//		for (int i = 0; i < offsetx.length; i++) {
+//
+//			int newTileX = tile.getTilex() + offsetx[i];
+//			int newTileY = tile.getTiley() + offsety[i];
+//
+//			if (newTileX >= 0 && newTileY >= 0) {
+//				newParameters = new HashMap<>();
+//				newParameters.put("type", "storeAroundTiles");
+//				newParameters.put("tile",tile);
+//				newParameters.put("tilex", newTileX);
+//				newParameters.put("tiley", newTileY);
+//
+//				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+//			}
+//		}
+//	}
 
 }

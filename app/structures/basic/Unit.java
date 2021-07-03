@@ -201,7 +201,8 @@ public class Unit extends Observer {
 						this.setHealth(newHealth);
 						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
 						// defense
-						if(!this.getCurrentState().equals(UnitState.HAS_ATTACKED)){
+						if(!this.getCurrentState().equals(UnitState.HAS_ATTACKED)
+								&& !this.getCurrentState().equals(UnitState.READY_ATTACK)){
 							parameters = new HashMap<>();
 							parameters.put("type", "beAttacked");
 							parameters.put("unit",attacker);

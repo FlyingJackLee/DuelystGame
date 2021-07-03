@@ -21,16 +21,39 @@ import java.util.Map;
  *
  */
 public class Unit extends Observer {
+
+	boolean hasMoved = false;
+	boolean hasAttacked = false;
+	
+	enum UnitState{
+		//the unit is ready after the next turn of summon
+		//TODO: switch in turn change
+		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
+
+	}
+
+	private UnitState currentState= UnitState.NOT_READY;
+
+	public void setCurrentState(UnitState currentState) {
+		this.currentState = currentState;
+	}
+
 	private Player owner;
+
+	public Player getOwner() {
+		return owner;
+	}
+	public void setOwner(Player owner) {
+		this.owner = owner;
+	}
+
+	private int remainMoveTimes;
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
 	private int health;
 	private int attack;
-	
-	boolean hasAttacked = false;
-	boolean hasMoved = false;
 
 	public void setAttack(int attack) {
 		this.attack = attack;
@@ -80,15 +103,6 @@ public class Unit extends Observer {
 		this.correction = correction;
 	}
 
-	
-	public int getAttack() {
-		return attack;
-	}
-
-	public int getHealth() {
-		return health;
-	}
-
 	public int getId() {
 		return id;
 	}
@@ -126,15 +140,12 @@ public class Unit extends Observer {
 		this.animations = animations;
 	}
 	
-	
-	public Player getOwner() {
-		return owner;
+	public int getHealth() {
+		return health;
 	}
-
-	public void setOwner(Player owner) {
-		this.owner = owner;
+	public int getAttack() {
+		return attack;
 	}
-
 	/**
 	 * This command sets the position of the Unit to a specified
 	 * tile.
@@ -154,6 +165,8 @@ public class Unit extends Observer {
 				BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
 				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
 			}
-		}
+
+	}
+
 	}
 }

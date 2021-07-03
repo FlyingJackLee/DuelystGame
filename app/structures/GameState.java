@@ -1,8 +1,9 @@
 package structures;
 
 import akka.actor.ActorRef;
+import commands.BasicCommands;
 import events.EventProcessor;
-import state.State;
+import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
@@ -10,8 +11,6 @@ import structures.basic.Unit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.smartcardio.Card;
 
 /**
  * This class can be used to hold information about the on-going game.
@@ -22,17 +21,51 @@ import javax.smartcardio.Card;
  */
 public class GameState extends Subject {
 
-    private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
-    private String state; //The state variable is used to store current state
-    
-    private Unit unitClicked;
-    private Tile tileClicked;
-    private Player currentPlayer;
-    
-    List<Tile> tileList;
-    List<Unit> unitList;
 
-	public void setOut(ActorRef out) {
+    public enum CurrentState{
+        READY,CARD_SELECT,UNIT_SELECT
+    }
+
+    private CurrentState currentState = CurrentState.READY;
+
+
+    public CurrentState getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(CurrentState currentState) {
+        this.currentState = currentState;
+    }
+
+
+    private Card cardSelected = null;
+
+    public void setCardSelected(Card cardSelected) {
+        this.cardSelected = cardSelected;
+    }
+
+
+    private Tile tileSelected = null;
+
+    public void setTileSelected(Tile tileSelected) { this.tileSelected = tileSelected; }
+    public Tile getTileSelected() { return tileSelected; }
+
+
+
+    private Player currentPlayer;
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+
+    private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
+
+    public void setOut(ActorRef out) {
         this.out = out;
     }
 
@@ -40,44 +73,7 @@ public class GameState extends Subject {
         return out;
     }
 
-    public String getState() {
-		return state;
-	}
-
-	public void setState(String state) {
-		this.state = state;
-	}
-
-	public Unit getUnitClicked() {
-		return unitClicked;
-	}
-	
-	public Tile getTileClicked() {
-		return tileClicked;
-	}
-
-	public void setTileClicked(Tile tileClicked) {
-		this.tileClicked = tileClicked;
-		this.unitClicked = tileClicked.getUnitOnTile();
-	}
-
-	public Player getCurrentPlayer() {
-		return currentPlayer;
-	}
-
-	public void setCurrentPlayer(Player currentPlayer) {
-		this.currentPlayer = currentPlayer;
-	}
-
-	public List<Unit> getUnitList() {
-		return unitList;}
-
-	public List<Tile> getTileList() {
-		return tileList;
-	}
-
-
-	//make GameState as a subject.
+    //make GameState as a subject.
     private static GameState instance= new GameState();
 
     public static GameState getInstance(){
@@ -86,6 +82,12 @@ public class GameState extends Subject {
 
     private GameState(){
 
+    }
+
+    public void setStateReady(){
+        this.setCurrentState(currentState.READY);
+        this.setCardSelected(null);
+        this.setTileSelected(null);
     }
 
     public void clear(){
@@ -100,11 +102,8 @@ public class GameState extends Subject {
             observer.trigger(target,parameters);
         }
     }
-          
-    public void clearClickedTile() {
-		unitClicked = null;
-		tileClicked = null;
-	}
-	
+
+
+
 
 }

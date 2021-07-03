@@ -3,7 +3,9 @@ package events;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
+import play.api.Play;
 import structures.GameState;
+import structures.basic.Player;
 import structures.basic.Tile;
 
 import java.util.HashMap;
@@ -24,27 +26,46 @@ import java.util.Map;
  *
  */
 public class TileClicked implements EventProcessor{
-	
+
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
+
 		Map<String,Object> parameters = new HashMap<>();
-		
-		//Store the coordinate in parameters.
-		parameters.put("tilex",tilex);
-		parameters.put("tiley",tiley);
-		
-		if(GameState.getInstance().getState().equals("readyState")) {
-			parameters.put("type", "tileClicked");
-		}else if(GameState.getInstance().getState().equals("unitClicked")) {
-			parameters.put("type", "action");
-		}else if(GameState.getInstance().getState().equals("cardClicked")) {
-			parameters.put("type", "summon");
+//		parameters.put("type","clickUnit");
+//		parameters.put("tilex",tilex);
+//		parameters.put("tiley",tiley);
+//
+//		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
+			parameters = new HashMap<>();
+			parameters.put("type","clickTile");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 		}
-		
-		GameState.getInstance().broadcastEvent(Tile.class, parameters);
+
+		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
+			parameters = new HashMap<>();
+			parameters.put("type", "operateUnit");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			parameters.put("unit", GameState.getInstance().getTileSelected().getUnitOnTile());
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		}
+
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
+			parameters = new HashMap<>();
+			parameters.put("type","cardApplied");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Player.class,parameters);
+
+		}
+
+
 
 	}
 }

@@ -1,8 +1,11 @@
 package structures.basic;
 
 
+import structures.GameState;
 import structures.Observer;
+import utils.BasicObjectBuilders;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,7 +18,6 @@ import java.util.Map;
  *
  */
 public class Card extends Observer{
-
 
 	int id;
 	
@@ -73,4 +75,18 @@ public class Card extends Observer{
 		if (this.getClass().equals(target)){
 		}
 	}
+
+	public int isCreatureOrSpell(){
+
+		//if it is a spell
+		if (this.getBigCard().getAttack() == -1){
+			return -1;
+		}
+		//if it is a creature
+		else {
+			return 1;
+		}
+	}
+
+
 }

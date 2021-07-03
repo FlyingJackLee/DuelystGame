@@ -36,7 +36,7 @@ public class Unit extends Observer {
 		this.currentState = currentState;
 	}
 
-	private Player owner;
+	private Player owner = GameState.getInstance().getCurrentPlayer();
 
 	public Player getOwner() {
 		return owner;

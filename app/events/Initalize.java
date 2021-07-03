@@ -10,7 +10,9 @@ import structures.GameState;
 import structures.basic.*;
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
+import utils.ToolBox;
 
+import javax.tools.Tool;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +32,8 @@ public class Initalize implements EventProcessor{
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
+		//clear the instance
+		GameState.getInstance().clearObservers();
 		//CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
 		//1. generate the tiles
@@ -63,12 +67,6 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.c_sundrop_elixir
 		};
 
-		for (int i = 0; i < 10; i++) {
-			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
-			humanPlayer.setDeck(card);
-			GameState.getInstance().add(card);
-		}
-
 		String[] deck2Cards = {
 				StaticConfFiles.c_planar_scout,
 				StaticConfFiles.c_rock_pulveriser,
@@ -81,10 +79,19 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.c_staff_of_ykir,
 				StaticConfFiles.c_entropic_decay
 		};
+
+		for (int i = 0; i < 10; i++) {
+			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
+			humanPlayer.setDeck(card);
+
+
+
+		}
+
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
 			AIPlayer.setDeck(card);
-			GameState.getInstance().add(card);
+
 		}
 
 		//register the players on gameState
@@ -97,16 +104,18 @@ public class Initalize implements EventProcessor{
 		//4.update the mana
 		Map<String,Object> parameters = new HashMap<>();
 		parameters.put("type","increaseMana");
-		parameters.put("mana","1");
+		//TODO WARNING:TEST CODE
+		parameters.put("mana","5");
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
 
 		//4.creat avatar for both players
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.humanAvatar,
-				0,Unit.class
+				ToolBox.humanAvatarId,Unit.class
 		);
 
 		humanAvatar.setOwner(humanPlayer);
+		//register observer
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
@@ -117,7 +126,7 @@ public class Initalize implements EventProcessor{
 
 		Unit AiAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.aiAvatar,
-				1,Unit.class
+				ToolBox.AIAvatarID,Unit.class
 		);
 		GameState.getInstance().add(AiAvatar);
 
@@ -136,7 +145,7 @@ public class Initalize implements EventProcessor{
 		humanAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
-		parameters.put("unitId","0");
+		parameters.put("unitId",String.valueOf(ToolBox.humanAvatarId));
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		//4.2 set attack/health of AiAvatar
@@ -144,7 +153,7 @@ public class Initalize implements EventProcessor{
 		AiAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
-		parameters.put("unitId","1");
+		parameters.put("unitId",String.valueOf(ToolBox.AIAvatarID));
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
@@ -155,6 +164,10 @@ public class Initalize implements EventProcessor{
 		parameters = new HashMap<>();
 		parameters.put("type","draw3Cards");
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
+
+
+
+
 
 	}
 

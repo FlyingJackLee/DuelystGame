@@ -6,6 +6,7 @@ import structures.Observer;
 import utils.BasicObjectBuilders;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -17,7 +18,7 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
-public class Card extends Observer{
+public class Card {
 
 	int id;
 	
@@ -70,12 +71,14 @@ public class Card extends Observer{
 	}
 
 
-	@Override
-	public void trigger(Class target, Map<String,Object> parameters) {
-		if (this.getClass().equals(target)){
-		}
-	}
 
+
+	/*
+	 *
+	 * check a card is a spell or creature
+	 *
+	 * @return int -1:spell, 1:creature
+	 */
 	public int isCreatureOrSpell(){
 
 		//if it is a spell
@@ -88,5 +91,25 @@ public class Card extends Observer{
 		}
 	}
 
+
+	public Unit cardToUnit(){
+		String unit_path = this.cardname.split(" ")[0].toLowerCase(Locale.ROOT);
+		if (this.cardname.split(" ")[1].toLowerCase(Locale.ROOT) != ""){
+			unit_path += "_" + this.cardname.split(" ")[1].toLowerCase(Locale.ROOT);
+		}
+		unit_path = "conf/gameconfs/units/" + unit_path + ".json";
+
+		//create unit
+		Unit unit = BasicObjectBuilders.loadUnit(unit_path,id,Unit.class);
+
+		//register unit
+		GameState.getInstance().add(unit);
+
+		//set health and attack
+		unit.setHealth(this.bigCard.getHealth());
+		unit.setAttack(this.bigCard.getAttack());
+
+		return unit;
+	}
 
 }

@@ -104,10 +104,32 @@ public class Player extends Observer {
 			else if (parameters.get("type").equals("cardSelectedReset")) {
 				cardSelected(-1);
 			}
-			else if (parameters.get("type").equals("cardApplied")) {
 
-			}
+
 		}
+	}
+
+	//clear card from hand
+	public void removeCardFromHand(Card card){
+		//remove from hand(backend and frontend)
+		BasicCommands.deleteCard(GameState.getInstance().getOut(), cardsOnHand.indexOf(card));
+		try{Thread.sleep(50);}catch (InterruptedException e){e.printStackTrace();}
+		this.cardsOnHand.remove(card);
+
+		//remove form gameState
+		GameState.getInstance().setCardSelected(null);
+		//clear highlight
+		cardSelected(-1);
+
+		//clear the range
+		Map<String,Object> parameters = new HashMap<>();
+		parameters = new HashMap<>();
+		parameters.put("type","textureReset");
+		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		//reset game current state
+		GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
+
 	}
 
 
@@ -152,41 +174,43 @@ public class Player extends Observer {
 
 		//Calculate the target range of card
 		//if it is a spell
-		if (cardSelected.isCreatureOrSpell() == -1){
+		if (cardSelected.isCreatureOrSpell() == -1) {
 			String rule = cardSelected.getBigCard().getRulesTextRows()[0];
-
+			parameters = new HashMap<>();
+			parameters.put("type", "searchUnit");
 			//if the target is a unit
-			if (rule.contains("unit")){
-				parameters = new HashMap<>();
-				parameters.put("type","searchUnit");
+			if (rule.toLowerCase(Locale.ROOT).contains("unit")) {
 
 				//find all enemy Unit
-				if (rule.contains("enemy")){
-					parameters.put("range","enemy");
+				if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
+					parameters.put("range", "enemy");
 
 					//ask the tileS to give the list of enemy units and highlight them.
-					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
-				//find all  Unit
-				else {
-					parameters.put("range","all");
+				//find all non-avatar Unit
+				else if (rule.toLowerCase(Locale.ROOT).contains("non-avatar")) {
+					parameters.put("range", "non_avatar");
 					//ask the tileS to give the list of all units and highlight them.
-					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+					GameState.getInstance().broadcastEvent(Tile.class, parameters);
+				}
+				//find all Unit
+				else {
+					parameters.put("range", "all");
+					//ask the tileS to give the list of all units and highlight them.
+					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
 			}
 
 			//if the target is a avatar
-			else if (rule.contains("avatar")) {
-				parameters = new HashMap<>();
-				parameters.put("type","searchUnit");
-
-				//find all non avatar
-				//TODO
-				if (rule.contains("non-avatar")){
-					parameters.put("range","non-avatar");
-					//ask the tile to give the list of enemy units
-					GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
+			else if (rule.toLowerCase(Locale.ROOT).contains("avatar")) {
+				//find current avatar
+				if (rule.toLowerCase(Locale.ROOT).contains("your avatar")) {
+					{
+						parameters.put("range", "your_avatar");
+						//ask the tile to give the list of enemy units
+						GameState.getInstance().broadcastEvent(Tile.class, parameters);
+					}
 				}
 			}
 		}
@@ -203,3 +227,4 @@ public class Player extends Observer {
 	}
 
 }
+

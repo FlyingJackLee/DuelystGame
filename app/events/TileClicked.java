@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import akka.actor.ActorRef;
 import play.api.Play;
 import structures.GameState;
+import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
+import structures.basic.Unit;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,18 +36,38 @@ public class TileClicked implements EventProcessor{
 		int tiley = message.get("tiley").asInt();
 
 		Map<String,Object> parameters = new HashMap<>();
-//		parameters.put("type","clickUnit");
-//		parameters.put("tilex",tilex);
-//		parameters.put("tiley",tiley);
-//
-//		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
 
 		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 			parameters = new HashMap<>();
-			parameters.put("type","cardApplied");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
-			GameState.getInstance().broadcastEvent(Player.class,parameters);
+
+			//get card selected
+			Card cardSelected = GameState.getInstance().getCardSelected();
+
+			//if it is a creature
+			if (cardSelected.isCreatureOrSpell() == 1){
+				//summon unit
+				Unit new_unit = cardSelected.cardToUnit();
+				parameters.put("type","summon");
+				parameters.put("unit",new_unit);
+				GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+				//set attack and helath
+				parameters = new HashMap<>();
+				parameters.put("type","setUnit");
+				parameters.put("unitId",String.valueOf(cardSelected.getId()));
+
+				GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
+
+				GameState.getInstance().getCurrentPlayer().removeCardFromHand(cardSelected);
+			}
+			//if it is a spell
+			else {
+
+			}
 
 		}
 

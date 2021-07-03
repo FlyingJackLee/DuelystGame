@@ -30,6 +30,7 @@ public class GameState extends Subject {
 
 
     public CurrentState getCurrentState() {
+
         return currentState;
     }
 
@@ -44,7 +45,9 @@ public class GameState extends Subject {
         this.cardSelected = cardSelected;
     }
 
-
+    public Card getCardSelected() {
+        return cardSelected;
+    }
 
     private Player currentPlayer;
 
@@ -79,9 +82,7 @@ public class GameState extends Subject {
     }
 
     public void clear(){
-        instance= new GameState();
         super.clearObservers();
-        this.out = null;
     }
 
     @Override

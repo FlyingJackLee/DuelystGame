@@ -35,6 +35,14 @@ public class Tile extends Observer {
 		}
 	}
 
+
+	private List<Object> originMoveableTiles = new ArrayList<>();
+
+	private List<Object> originAttackableTiles = new ArrayList<>();
+
+	public List<Object> getOriginMoveableTiles() {return originMoveableTiles;}
+	public List<Object> getOriginAttackableTiles() {return originAttackableTiles;}
+
 	private TileState tileState = TileState.NORMAL;
 
 
@@ -49,13 +57,9 @@ public class Tile extends Observer {
 
 	private Unit unitOnTile;
 
-	public Unit getUnitOnTile() {
-		return unitOnTile;
-	}
+	public Unit getUnitOnTile() { return unitOnTile;}
 
-	public void setUnitOnTile(Unit unitOnTile) {
-		this.unitOnTile = unitOnTile;
-	}
+	public void setUnitOnTile(Unit unitOnTile) {this.unitOnTile = unitOnTile;}
 
 	@JsonIgnore
 	private static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -219,24 +223,19 @@ public class Tile extends Observer {
 						}
 						// if tile is white, and the unit state is READY, only move tile
 						if (this.tileState.equals(tileState.WHITE)) {
-							// move
-							unit.setPositionByTile(this);
-							BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
-							// after move
+							// change state
 							unit.setCurrentState(Unit.UnitState.HAS_MOVED);
+							// move
+							this.move(unit);
 
-							this.setUnitOnTile(unit);
-							GameState.getInstance().getTileSelected().setUnitOnTile(null);
-							GameState.getInstance().setStateReady();
-							try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 						}
 						// if tile is red, and the unit state is READY
 						if (this.tileState.equals(tileState.RED)){
-
-
 							unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
 							GameState.getInstance().setStateReady();
-							try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
+							// only attack
+							attack(unit,this.unitOnTile);
+
 						}
 					}
 					// if a unit want to move and attack, use this logic
@@ -244,19 +243,20 @@ public class Tile extends Observer {
 						if (this.tileState.equals(tileState.RED)){
 							unit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
 							GameState.getInstance().setStateReady();
-							try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
+							attack(unit,this.unitOnTile);
 						}
 					}
 
-
 				}
 				else if (parameters.get("type").equals("moveHighlight")) {
+					GameState.getInstance().getTileSelected().getOriginMoveableTiles().add(this);
 					if (this.unitOnTile == null) {
 						this.setTileState(tileState.WHITE);
 						this.attackHighlight(); // set the move and attack position
 					}
 				}
 				else if (parameters.get("type").equals("attackHighlight")) {
+					GameState.getInstance().getTileSelected().getOriginAttackableTiles().add(this);
 					// if the unit is enemy unit, highlight the tile to red
 					if (this.unitOnTile != null &&
 							!this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
@@ -276,14 +276,12 @@ public class Tile extends Observer {
 					try { Thread.sleep(500);}
 					catch (InterruptedException e) {e.printStackTrace();}
 				}
+				else if (parameters.get("type").equals("unitDead")){
+					this.setUnitOnTile(null);
+				}
 			}
 		}
 	}
-
-
-
-
-
 
 //		//handle 1: find unit(all,avatar,(enemy) unit)
 //		if (parameters.get("type").equals("searchUnit"))
@@ -430,7 +428,6 @@ public class Tile extends Observer {
 				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 			}
 		}
-		try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 	}
 
 	public void attackHighlight() {
@@ -453,7 +450,6 @@ public class Tile extends Observer {
 				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 			}
 		}
-		try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 	}
 
 	public void clearAllHighlight() {
@@ -470,5 +466,24 @@ public class Tile extends Observer {
 		}
 		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 	}
+
+	public void attack(Unit attacker, Unit beattacked){
+		Map<String,Object> parameters = new HashMap<>();
+		parameters.put("type", "beAttacked");
+		parameters.put("unit",beattacked);
+		parameters.put("attacker",attacker);
+		GameState.getInstance().broadcastEvent(Unit.class, parameters);
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+	}
+
+	public void move(Unit unit){
+		unit.setPositionByTile(this);
+		BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
+		this.setUnitOnTile(unit);
+		GameState.getInstance().getTileSelected().setUnitOnTile(null);
+		GameState.getInstance().setStateReady();
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+	}
+
 
 }

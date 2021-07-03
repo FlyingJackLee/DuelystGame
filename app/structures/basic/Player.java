@@ -77,6 +77,7 @@ public class Player extends Observer {
 			if (parameters.get("type").equals("increaseMana")){
 				this.setMana(mana + Integer.parseInt((String) parameters.get("mana")));
 			}
+
 			else if (parameters.get("type").equals("draw3Cards")) {
 				drawCard();
 				drawCard();

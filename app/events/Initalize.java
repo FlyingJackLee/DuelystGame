@@ -138,6 +138,7 @@ public class Initalize implements EventProcessor{
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
 		parameters.put("unitId","0");
+		parameters.put("unit",humanAvatar);
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		//4.2 set attack/health of AiAvatar
@@ -146,6 +147,7 @@ public class Initalize implements EventProcessor{
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
 		parameters.put("unitId","1");
+		parameters.put("unit",AiAvatar);
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
@@ -166,12 +168,20 @@ public class Initalize implements EventProcessor{
 		);
 		GameState.getInstance().add(friend1);
 		friend1.setOwner(humanPlayer);
+		friend1.setAttack(3);
+		friend1.setHealth(10);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",3);
 		parameters.put("tiley",2);
 		parameters.put("unit",friend1);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		parameters = new HashMap<>();
+		parameters.put("type","setUnit");
+		parameters.put("unitId","2");
+		parameters.put("unit",friend1);
+		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		// Case 2: friend in attack range
 		Unit friend2 = BasicObjectBuilders.loadUnit(
@@ -180,12 +190,20 @@ public class Initalize implements EventProcessor{
 		);
 		GameState.getInstance().add(friend2);
 		friend2.setOwner(humanPlayer);
+		friend2.setAttack(2);
+		friend2.setHealth(3);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",1);
 		parameters.put("tiley",3);
 		parameters.put("unit",friend2);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		parameters = new HashMap<>();
+		parameters.put("type","setUnit");
+		parameters.put("unitId","3");
+		parameters.put("unit",friend2);
+		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		// Case 3: enemy in attack range
 		Unit enemy1 = BasicObjectBuilders.loadUnit(
@@ -194,12 +212,20 @@ public class Initalize implements EventProcessor{
 		);
 		GameState.getInstance().add(enemy1);
 		enemy1.setOwner(AIPlayer);
+		enemy1.setAttack(4);
+		enemy1.setHealth(3);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",1);
 		parameters.put("tiley",1);
 		parameters.put("unit",enemy1);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		parameters = new HashMap<>();
+		parameters.put("type","setUnit");
+		parameters.put("unitId","4");
+		parameters.put("unit",enemy1);
+		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		// case 4: enemy in move and attack range
 		Unit enemy2 = BasicObjectBuilders.loadUnit(
@@ -208,12 +234,20 @@ public class Initalize implements EventProcessor{
 		);
 		GameState.getInstance().add(enemy2);
 		enemy2.setOwner(AIPlayer);
+		enemy2.setAttack(4);
+		enemy2.setHealth(3);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",3);
 		parameters.put("tiley",3);
 		parameters.put("unit",enemy2);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		parameters = new HashMap<>();
+		parameters.put("type","setUnit");
+		parameters.put("unitId","5");
+		parameters.put("unit",enemy2);
+		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
 	}

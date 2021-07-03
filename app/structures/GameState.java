@@ -26,41 +26,42 @@ public class GameState extends Subject {
         READY,CARD_SELECT,UNIT_SELECT
     }
 
+    // current state
     private CurrentState currentState = CurrentState.READY;
-
-
     public CurrentState getCurrentState() {
         return currentState;
     }
-
     public void setCurrentState(CurrentState currentState) {
         this.currentState = currentState;
     }
 
 
+    // selected card
     private Card cardSelected = null;
-
     public void setCardSelected(Card cardSelected) {
         this.cardSelected = cardSelected;
     }
 
 
+    // selected tile
     private Tile tileSelected = null;
 
     public void setTileSelected(Tile tileSelected) { this.tileSelected = tileSelected; }
     public Tile getTileSelected() { return tileSelected; }
 
-
-
+    // current player
     private Player currentPlayer;
-
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
 
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
     }
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    // current turn
+    private int currentTurn;
+    public int getCurrentTurn() { return currentTurn;}
 
 
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI

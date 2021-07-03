@@ -34,7 +34,7 @@ public class TileClicked implements EventProcessor{
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
 
-		Map<String,Object> parameters = new HashMap<>();
+		Map<String,Object> parameters;
 //		parameters.put("type","clickUnit");
 //		parameters.put("tilex",tilex);
 //		parameters.put("tiley",tiley);

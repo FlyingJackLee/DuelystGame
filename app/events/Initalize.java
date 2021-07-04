@@ -83,15 +83,11 @@ public class Initalize implements EventProcessor{
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
 			humanPlayer.setDeck(card);
-
-
-
 		}
 
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
 			AIPlayer.setDeck(card);
-
 		}
 
 		//register the players on gameState
@@ -104,6 +100,7 @@ public class Initalize implements EventProcessor{
 		//4.update the mana
 		Map<String,Object> parameters = new HashMap<>();
 		parameters.put("type","increaseMana");
+
 		//TODO WARNING:TEST CODE
 		parameters.put("mana","5");
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
@@ -164,10 +161,6 @@ public class Initalize implements EventProcessor{
 		parameters = new HashMap<>();
 		parameters.put("type","draw3Cards");
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
-
-
-
-
 
 	}
 

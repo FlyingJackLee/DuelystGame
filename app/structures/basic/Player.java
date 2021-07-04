@@ -1,8 +1,6 @@
 package structures.basic;
 
-import akka.util.Helpers;
 import commands.BasicCommands;
-import org.ietf.jgss.GSSManager;
 import structures.GameState;
 import structures.Observer;
 import utils.ToolBox;
@@ -19,7 +17,7 @@ import java.util.*;
 public class Player extends Observer {
 
 	private List<Card> deck = new ArrayList<>();
-	private List<Card> cardsOnHand  = new ArrayList<>();;
+	private Card[] cardsOnHand  = new Card[6];
 
 	public void setDeck(Card ...cards){
 		for (Card card:cards) {
@@ -38,9 +36,31 @@ public class Player extends Observer {
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
-		this.cardsOnHand.add(card);
-		BasicCommands.drawCard(GameState.getInstance().getOut(),
-				card,cardsOnHand.size()-1,0);
+
+		int i;
+
+		//find a blank space
+		for (i = 0; i < 6; i++) {
+			if(this.cardsOnHand[i] == null){
+				this.cardsOnHand[i] = card;
+				BasicCommands.drawCard(GameState.getInstance().getOut(),
+						card,i +1,0);
+				try {
+					Thread.sleep(ToolBox.delay);
+				}
+				//wait for the frontend
+				catch (InterruptedException e){e.printStackTrace();}
+				break;
+			}
+		}
+
+
+		if (i == 6){
+			//TODO : need to be test.
+			ToolBox.logNotification("You can have more card(exceed 6), discard this card.");
+		}
+
+
 	}
 
 
@@ -84,16 +104,24 @@ public class Player extends Observer {
 			}
 
 			else if (parameters.get("type").equals("cardClick")) {
-				int handPosition = (Integer) parameters.get("position");
+
+				int handPosition = (Integer) parameters.get("position") - 1;
+
+				if (handPosition <0 || handPosition > 5 ){
+					return;
+				}
+
+				Card card = this.cardsOnHand[handPosition];
+
 				//if the player has enough mana
-				if(cardsOnHand.get(handPosition).getManacost() <= this.mana){
+				if(card.getManacost() <= this.mana){
+
 					//highlight card
 					cardSelected(handPosition);
-					//highlight valid tiles
-					showValidRange(handPosition);
 
-					//store the card into gameState
-					GameState.getInstance().setCardSelected(cardsOnHand.get(handPosition));
+					//highlight valid tiles
+					showValidRange(card);
+
 				}
 				else {
 					ToolBox.logNotification("Mana not enough");
@@ -102,7 +130,7 @@ public class Player extends Observer {
 			}
 
 			else if (parameters.get("type").equals("cardSelectedReset")) {
-				cardSelected(-1);
+				clearSelected();
 			}
 
 
@@ -111,24 +139,32 @@ public class Player extends Observer {
 
 	//clear card from hand
 	public void removeCardFromHand(Card card){
+
+
+		//clear highlight
+		clearSelected();
+
+
+		int index = ToolBox.findObjectInArray(this.cardsOnHand,card);
+
+
 		//remove from hand(backend and frontend)
-		BasicCommands.deleteCard(GameState.getInstance().getOut(), cardsOnHand.indexOf(card));
-		try{Thread.sleep(50);}catch (InterruptedException e){e.printStackTrace();}
-		this.cardsOnHand.remove(card);
+		BasicCommands.deleteCard(GameState.getInstance().getOut(),index+1);
+		try {
+			Thread.sleep(500);
+		}catch (InterruptedException e){e.printStackTrace();}
+		this.cardsOnHand[index] = null;
 
 		//remove form gameState
 		GameState.getInstance().setCardSelected(null);
-		//clear highlight
-		cardSelected(-1);
+
 
 		//clear the range
 		Map<String,Object> parameters = new HashMap<>();
-		parameters = new HashMap<>();
 		parameters.put("type","textureReset");
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
-		//reset game current state
-		GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
+
 
 	}
 
@@ -137,29 +173,44 @@ public class Player extends Observer {
 	 *
 	 * set the card selected
 	 *
-	 * @param position:  0 ~ 6( at specific position), or -1(reset selected)
+	 * @param position:  0 ~ 6( at specific position)
 	 */
 	private void cardSelected(int position){
 
-		for (int i = 0; i < cardsOnHand.size(); i++) {
-			if (i == position){
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						cardsOnHand.get(i),i,1);
-				GameState.getInstance().setCardSelected(cardsOnHand.get(i));
-			}
-			else{
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						cardsOnHand.get(i),i,0);
-				GameState.getInstance().setCardSelected(null);
+		Card cardSelected = this.cardsOnHand[position];
 
-			}
+		//if the player have selected a card, reset the card highlight firstly
+		if ( GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT) ){
+			clearSelected();
+		}
+
+		//set backend
+		GameState.getInstance().setCardSelected(cardSelected);
+
+		//render frontend
+		BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
+					position + 1
+					,1);
+
+
+	}
+
+	private void clearSelected(){
+		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
+
+			BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
+					ToolBox.findObjectInArray(cardsOnHand,GameState.getInstance().getCardSelected()) + 1
+					,0);
+
+			//clear backend
+			GameState.getInstance().setCardSelected(null);
 
 
 		}
 	}
 
 
-	private void showValidRange(int position){
+	private void showValidRange(Card cardSelected){
 		Map<String,Object> parameters = new HashMap<>();
 
 		parameters.put("type","textureReset");
@@ -167,9 +218,6 @@ public class Player extends Observer {
 
 		//waiting for completion of reset
 		try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
-
-
-		Card cardSelected = this.cardsOnHand.get(position);
 
 
 		//Calculate the target range of card
@@ -222,8 +270,6 @@ public class Player extends Observer {
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
 		}
-
-
 	}
 
 }

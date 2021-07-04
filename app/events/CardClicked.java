@@ -28,7 +28,8 @@ public class CardClicked implements EventProcessor{
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		
+
+
 		int handPosition = message.get("position").asInt();
 
 		Map<String,Object> parameters = new HashMap<>();
@@ -36,7 +37,8 @@ public class CardClicked implements EventProcessor{
 		parameters.put("position",handPosition);
 
 		GameState.getInstance().broadcastEvent(Player.class,parameters);
-		GameState.getInstance().setCurrentState(GameState.CurrentState.CARD_SELECT);
+
+
 
 	}
 

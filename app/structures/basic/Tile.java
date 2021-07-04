@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.sslconfig.ssl.FakeChainedKeyStore;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
@@ -248,6 +249,15 @@ public class Tile extends Observer {
 				if ((Integer) parameters.get("tilex") == this.tilex
 						&& (Integer) parameters.get("tiley") == this.tiley) {
 
+					//summon from hand
+					Card cardSelected = (Card) parameters.get("card");
+					if(cardSelected != null){
+						//if it is not a valid tile, terminate
+						if (!this.tileState.equals(TileState.GREY)){
+							return;
+						}
+					}
+
 					Unit unit = (Unit) parameters.get("unit");
 					unit.setPositionByTile(this);
 					this.unitOnTile = unit;
@@ -260,42 +270,14 @@ public class Tile extends Observer {
 						e.printStackTrace();
 					}
 
-				}
-
-
-//			} else if (parameters.get("type").equals("tileHighlight")) {
-//				BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
-//			}
-
-				//TODO
-				else if (parameters.get("type").equals("clickUnit") && this.unitOnTile != null) {
-					if ((Integer) parameters.get("tilex") == this.tilex
-							&& (Integer) parameters.get("tiley") == this.tiley) {
-						Map<String, Object> newParameters;
-
-						int[] offsetx = new int[]{-1, 0, 0, 1, -2, -1, 1, 2, -1, 0, 1, 0};
-						int[] offsety = new int[]{-1, -2, -1, -1, 0, 0, 0, 0, 1, 1, 1, 2};
-
-						for (int i = 0; i < offsety.length; i++) {
-
-							int newTileX = tilex + offsetx[i];
-							int newTileY = tiley + offsety[i];
-
-							if (newTileX >= 0 && newTileY >= 0) {
-								newParameters = new HashMap<>();
-								newParameters.put("type", "tileHighlight");
-								newParameters.put("tilex", newTileX);
-								newParameters.put("tiley", newTileY);
-
-								GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-							}
-						}
+					//remove from hand
+					if(cardSelected != null){
+						GameState.getInstance().getCurrentPlayer().removeCardFromHand(cardSelected);
 					}
 
-
 				}
-			}
 
+			}
 
 		}
 

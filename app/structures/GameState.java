@@ -42,7 +42,17 @@ public class GameState extends Subject {
     private Card cardSelected = null;
 
     public void setCardSelected(Card cardSelected) {
+
         this.cardSelected = cardSelected;
+        if (cardSelected == null){
+            this.currentState = CurrentState.READY;
+        }
+        else
+        {
+            this.currentState = CurrentState.CARD_SELECT;
+
+        }
+
     }
 
     public Card getCardSelected() {

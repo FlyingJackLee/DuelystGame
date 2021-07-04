@@ -7,6 +7,7 @@ import play.api.Play;
 import structures.GameState;
 import structures.basic.Player;
 import structures.basic.Tile;
+import structures.basic.Unit;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class TileClicked implements EventProcessor{
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
 
-		Map<String,Object> parameters = new HashMap<>();
+		Map<String,Object> parameters;
 //		parameters.put("type","clickUnit");
 //		parameters.put("tilex",tilex);
 //		parameters.put("tiley",tiley);
@@ -41,7 +42,7 @@ public class TileClicked implements EventProcessor{
 //		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
 			parameters = new HashMap<>();
-			parameters.put("type","clickTile");
+			parameters.put("type","tileClicked");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
@@ -52,8 +53,8 @@ public class TileClicked implements EventProcessor{
 			parameters.put("type", "operateUnit");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
-			parameters.put("unit", GameState.getInstance().getTileSelected().getUnitOnTile());
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
 		}
 
 		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){

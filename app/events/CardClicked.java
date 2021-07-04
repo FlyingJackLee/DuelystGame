@@ -30,13 +30,9 @@ public class CardClicked implements EventProcessor{
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
 
-		int handPosition = message.get("position").asInt();
+		int handPosition = message.get("position").asInt() - 1;
 
-		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","cardClick");
-		parameters.put("position",handPosition);
-
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
+		GameState.getInstance().getCurrentPlayer().cardSelected(handPosition);
 
 
 

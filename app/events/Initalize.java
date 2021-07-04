@@ -90,20 +90,11 @@ public class Initalize implements EventProcessor{
 			AIPlayer.setDeck(card);
 		}
 
-		//register the players on gameState
-		GameState.getInstance().add(humanPlayer);
-		GameState.getInstance().add(AIPlayer);
-
 
 		BasicCommands.addPlayer1Notification(out, "Your turn", 2);
 
-		//4.update the mana
 		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","increaseMana");
 
-		//TODO WARNING:TEST CODE
-		parameters.put("mana","5");
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
 
 		//4.creat avatar for both players
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(
@@ -155,12 +146,13 @@ public class Initalize implements EventProcessor{
 
 
 		//5.set player
-		GameState.getInstance().setCurrentPlayer(humanPlayer);
+		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
 
 		//6.human player draw 3 cards
-		parameters = new HashMap<>();
-		parameters.put("type","draw3Cards");
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
+		GameState.getInstance().getCurrentPlayer().drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
+
 
 	}
 

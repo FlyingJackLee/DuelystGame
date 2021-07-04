@@ -14,7 +14,7 @@ import java.util.*;
  * @author Dr. Richard McCreadie
  *
  */
-public class Player extends Observer {
+public class Player {
 
 	private List<Card> deck = new ArrayList<>();
 	private Card[] cardsOnHand  = new Card[6];
@@ -27,12 +27,10 @@ public class Player extends Observer {
 
 	/*
 	 *
-	 * TODO
+	 * drawCard From deck
 	 *
-	 * @param  TODO
-	 * @return void TODO
 	 */
-	private void drawCard(){
+	public void drawCard(){
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
@@ -63,7 +61,6 @@ public class Player extends Observer {
 
 	}
 
-
 	int health;
 	int mana;
 	
@@ -91,54 +88,13 @@ public class Player extends Observer {
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(),this);
 	}
 
-	@Override
-	public void trigger(Class target, Map<String,Object> parameters) {
-		if (this.getClass().equals(target)){
-			if (parameters.get("type").equals("increaseMana")){
-				this.setMana(mana + Integer.parseInt((String) parameters.get("mana")));
-			}
-			else if (parameters.get("type").equals("draw3Cards")) {
-				drawCard();
-				drawCard();
-				drawCard();
-			}
 
-			else if (parameters.get("type").equals("cardClick")) {
-
-				int handPosition = (Integer) parameters.get("position") - 1;
-
-				if (handPosition <0 || handPosition > 5 ){
-					return;
-				}
-
-				Card card = this.cardsOnHand[handPosition];
-
-				//if the player has enough mana
-				if(card.getManacost() <= this.mana){
-
-					//highlight card
-					cardSelected(handPosition);
-
-					//highlight valid tiles
-					showValidRange(card);
-
-				}
-				else {
-					ToolBox.logNotification("Mana not enough");
-				}
-
-			}
-
-			else if (parameters.get("type").equals("cardSelectedReset")) {
-				clearSelected();
-			}
-
-
-		}
-	}
 
 	//clear card from hand
 	public void removeCardFromHand(Card card){
+
+		//update the mana
+		this.setMana(mana-card.getManacost());
 
 
 		//clear highlight
@@ -173,29 +129,47 @@ public class Player extends Observer {
 	 *
 	 * set the card selected
 	 *
-	 * @param position:  0 ~ 6( at specific position)
+	 * @param handPosition:  0 ~ 6( at specific position)
 	 */
-	private void cardSelected(int position){
+	public void cardSelected(int handPosition){
 
-		Card cardSelected = this.cardsOnHand[position];
 
-		//if the player have selected a card, reset the card highlight firstly
-		if ( GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT) ){
-			clearSelected();
+		if (handPosition <0 || handPosition > 5 ){
+			return;
 		}
 
-		//set backend
-		GameState.getInstance().setCardSelected(cardSelected);
+		Card cardSelected = this.cardsOnHand[handPosition];
 
-		//render frontend
-		BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
-					position + 1
+		//if the player has enough mana
+		if(cardSelected.getManacost() <= this.mana){
+
+			//highlight card
+			//if the player have selected a card, reset the card highlight firstly
+			if ( GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT) ){
+				clearSelected();
+			}
+
+			//set backend
+			GameState.getInstance().setCardSelected(cardSelected);
+
+			//render frontend
+			BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
+					handPosition + 1
 					,1);
+
+			//highlight valid tiles
+			showValidRange(cardSelected);
+
+		}
+		else {
+			ToolBox.logNotification("Mana not enough");
+			return;
+		}
 
 
 	}
 
-	private void clearSelected(){
+	public void clearSelected(){
 		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 
 			BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
@@ -210,7 +184,7 @@ public class Player extends Observer {
 	}
 
 
-	private void showValidRange(Card cardSelected){
+	public void showValidRange(Card cardSelected){
 		Map<String,Object> parameters = new HashMap<>();
 
 		parameters.put("type","textureReset");

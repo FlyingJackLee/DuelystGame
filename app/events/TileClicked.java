@@ -3,8 +3,11 @@ package events;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
+import play.api.Play;
 import structures.GameState;
+import structures.basic.Player;
 import structures.basic.Tile;
+import structures.basic.Unit;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,10 +34,39 @@ public class TileClicked implements EventProcessor{
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
 
-		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type", "tileClicked");
-		parameters.put("tilex", tilex);
-		parameters.put("tiley", tiley);
-		GameState.getInstance().broadcastEvent(Tile.class, parameters);
+		Map<String,Object> parameters;
+//		parameters.put("type","clickUnit");
+//		parameters.put("tilex",tilex);
+//		parameters.put("tiley",tiley);
+//
+//		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
+			parameters = new HashMap<>();
+			parameters.put("type","tileClicked");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		}
+
+		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
+			parameters = new HashMap<>();
+			parameters.put("type", "operateUnit");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		}
+
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
+			parameters = new HashMap<>();
+			parameters.put("type","cardApplied");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Player.class,parameters);
+
+		}
+
+
+
 	}
 }

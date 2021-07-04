@@ -50,16 +50,13 @@ public class GameState extends Subject {
         Map<String,Object> parameters =  new HashMap<>();
         parameters.put("type","unitBeReady");
         GameState.getInstance().broadcastEvent(Unit.class,parameters);
-        try {
-            Thread.sleep(ToolBox.delay);
-        }catch (InterruptedException e){e.printStackTrace();}
 
-
-        this.currentPlayer = playerContainers[1];
 
         if (this.currentPlayer == playerContainers[0]){
             //clear mana of previous player
             this.currentPlayer.setMana(0);
+            this.currentPlayer = playerContainers[1];
+
 
         }
         else {

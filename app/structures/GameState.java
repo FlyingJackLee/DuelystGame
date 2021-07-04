@@ -9,6 +9,7 @@ import structures.basic.Tile;
 import structures.basic.Unit;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,13 +84,6 @@ public class GameState extends Subject {
 
     private GameState(){
 
-    }
-
-    // After move or attack, clear the selected tile, and switch the current state
-    public void setStateReady(){
-        this.setCurrentState(currentState.READY);
-        this.tileSelected.clearAllHighlight();
-        this.setTileSelected(null);
     }
 
     public void clear(){

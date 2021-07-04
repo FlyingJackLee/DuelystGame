@@ -165,55 +165,44 @@ public class Unit extends Observer {
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
 		if (this.getClass().equals(target)){
-//			Integer.parseInt((String) parameters.get("unitId"));
-//			if (parameters.get("type").equals("setUnit")){
-//				BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
-//				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
-//			}
-
-			Unit unit = (Unit)parameters.get("unit");
-			if(unit.equals(this)){
-				if (parameters.get("type").equals("setUnit")){
+			if (parameters.get("type").equals("setUnit") && parameters.get("unit").equals(this)){
 					BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
 					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
+			}
+			else if(parameters.get("type").equals("beAttacked") && parameters.get("unit").equals(this)){
+				Unit attacker = (Unit) parameters.get("attacker");
+				BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
+				try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+
+				BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
+
+				this.setHealth(this.health - attacker.getAttack());
+				// enemy die
+				if(this.health < 1){
+					Map<String, Object> newParameters = new HashMap<>();
+					newParameters.put("type","unitDead");
+					newParameters.put("tilex",this.getPosition().getTilex());
+					newParameters.put("tiley",this.getPosition().getTiley());
+					GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
+					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
+					BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
 				}
-				else if(parameters.get("type").equals("beAttacked")){
-					Unit attacker = (Unit)parameters.get("attacker");
-					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
-					try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
-
-					int newHealth = this.health - attacker.getAttack();
-					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
-
-
-					// enemy die
-					if(newHealth < 1){
-						parameters = new HashMap<>();
-						parameters.put("type", "unitDead");
-						parameters.put("tilex",this.getPosition().getTilex());
-						parameters.put("tiley",this.getPosition().getTiley());
-						GameState.getInstance().broadcastEvent(Tile.class, parameters);
-						BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
-						BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
-					}
-					else {
-						// if enemy alive
-						this.setHealth(newHealth);
-						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
-						// defense
-						if(!this.getCurrentState().equals(UnitState.HAS_ATTACKED)
-								&& !this.getCurrentState().equals(UnitState.READY_ATTACK)){
-							parameters = new HashMap<>();
-							parameters.put("type", "beAttacked");
-							parameters.put("unit",attacker);
-							parameters.put("attacker",this);
-							GameState.getInstance().broadcastEvent(Unit.class, parameters);
-						}
+				else {
+					// if enemy alive
+					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
+					// defense
+					if(!this.getCurrentState().equals(UnitState.HAS_ATTACKED)
+							&& !this.getCurrentState().equals(UnitState.READY_ATTACK)){
+						Map<String, Object> newParameters = new HashMap<>();
+						newParameters.put("type", "beAttacked");
+						newParameters.put("unit",attacker);
+						newParameters.put("attacker",this);
+						GameState.getInstance().broadcastEvent(Unit.class, newParameters);
 					}
 				}
 			}
 		}
 	}
-
 
 }

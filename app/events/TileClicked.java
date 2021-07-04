@@ -40,22 +40,19 @@ public class TileClicked implements EventProcessor{
 //		parameters.put("tiley",tiley);
 //
 //		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-		GameState object = GameState.getInstance();
-		if(object.getCurrentState().equals(GameState.CurrentState.READY)){
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
 			parameters = new HashMap<>();
 			parameters.put("type","tileClicked");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
-			object.broadcastEvent(Tile.class,parameters);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 		}
 
-		else if(object.getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
-			Unit unitSelected = object.getTileSelected().getUnitOnTile();
+		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
 			parameters = new HashMap<>();
 			parameters.put("type", "operateUnit");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
-			parameters.put("unit", unitSelected);
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
 		}

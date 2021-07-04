@@ -129,9 +129,6 @@ public class Initalize implements EventProcessor{
 		parameters.put("unit",AiAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
-
-
-
 		//4.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);

@@ -28,10 +28,12 @@ public class OtherClicked implements EventProcessor{
 		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
 
 			//clear card selected
+
 			GameState.getInstance().getCurrentPlayer().clearSelected();
 
+
 			//clear valid tiles highlight
-			Map<String,Object> parameters = new HashMap<>();
+			parameters = new HashMap<>();
 			parameters.put("type","textureReset");
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 

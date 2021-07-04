@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+
 /**
  * 2 * @Author: flyingjack
  * 3 * @Date: 2021/6/30 2:53 pm
@@ -24,6 +25,7 @@ public class ToolBox {
     public static void logNotification(String message){
         BasicCommands.addPlayer1Notification(GameState.getInstance().getOut(), message, 2);
     }
+
 
     public static<T> int findObjectInArray(T[] _6Elements, T element  ){
 

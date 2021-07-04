@@ -18,7 +18,9 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
+
 public class Card {
+
 
 	int id;
 	
@@ -110,6 +112,19 @@ public class Card {
 		unit.setAttack(this.bigCard.getAttack());
 
 		return unit;
+	}
+
+
+	public int isCreatureOrSpell(){
+
+		//if it is a spell
+		if (this.getBigCard().getAttack() == -1){
+			return -1;
+		}
+		//if it is a creature
+		else {
+			return 1;
+		}
 	}
 
 }

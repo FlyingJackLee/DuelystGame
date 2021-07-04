@@ -1,6 +1,8 @@
 package structures.basic;
 
+import akka.util.Helpers;
 import commands.BasicCommands;
+import org.ietf.jgss.GSSManager;
 import structures.GameState;
 import structures.Observer;
 import utils.ToolBox;
@@ -87,7 +89,6 @@ public class Player {
 		this.mana = mana;
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(),this);
 	}
-
 
 
 	//clear card from hand
@@ -233,18 +234,8 @@ public class Player {
 						//ask the tile to give the list of enemy units
 						GameState.getInstance().broadcastEvent(Tile.class, parameters);
 					}
-				}
-			}
-		}
-		//if it is a creature
-		else {
-			parameters = new HashMap<>();
-			parameters.put("type","validSummonRangeHighlight");
 
-			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
-		}
-	}
 
 }
 

@@ -103,7 +103,7 @@ public class Initalize implements EventProcessor{
 		);
 
 		humanAvatar.setOwner(humanPlayer);
-		//register observer
+
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
@@ -127,13 +127,15 @@ public class Initalize implements EventProcessor{
 		parameters.put("unit",AiAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
-
 		//4.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
+
 		parameters.put("unitId",String.valueOf(ToolBox.humanAvatarId));
+		parameters.put("unit",humanAvatar);
+
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		//4.2 set attack/health of AiAvatar
@@ -141,17 +143,22 @@ public class Initalize implements EventProcessor{
 		AiAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
+
 		parameters.put("unitId",String.valueOf(ToolBox.AIAvatarID));
+		parameters.put("unit",AiAvatar);
+
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
 		//5.set player
 		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
 
+
 		//6.human player draw 3 cards
 		GameState.getInstance().getCurrentPlayer().drawCard();
 		GameState.getInstance().getCurrentPlayer().drawCard();
 		GameState.getInstance().getCurrentPlayer().drawCard();
+
 
 
 	}

@@ -35,7 +35,7 @@ public class TileClicked implements EventProcessor{
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
 
-		Map<String,Object> parameters = new HashMap<>();
+		Map<String,Object> parameters;
 
 
 		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
@@ -80,10 +80,24 @@ public class TileClicked implements EventProcessor{
 			else {
 
 			}
+			}
 
+		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
+			parameters = new HashMap<>();
+			parameters.put("type","tileClicked");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 		}
 
+		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
+			parameters = new HashMap<>();
+			parameters.put("type", "operateUnit");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
+		}
 
 	}
 }

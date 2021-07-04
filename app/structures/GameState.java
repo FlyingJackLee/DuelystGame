@@ -7,6 +7,7 @@ import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
+import utils.ToolBox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +38,48 @@ public class GameState extends Subject {
         }
     }
 
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
 
+
+    //switch player
+    public void switchPlayer() {
+
+        //let all unit be ready for this player
+        Map<String,Object> parameters =  new HashMap<>();
+        parameters.put("type","unitBeReady");
+        GameState.getInstance().broadcastEvent(Unit.class,parameters);
+        try {
+            Thread.sleep(ToolBox.delay);
+        }catch (InterruptedException e){e.printStackTrace();}
+
+
+        this.currentPlayer = playerContainers[1];
+
+        if (this.currentPlayer == playerContainers[0]){
+            //clear mana of previous player
+            this.currentPlayer.setMana(0);
+
+        }
+        else {
+            //clear mana of previous player
+            this.currentPlayer.setMana(0);
+            this.currentPlayer = playerContainers[0];
+        }
+
+        //update turn and mana
+        turnCount ++;
+        this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
+
+        //draw a card
+        this.currentPlayer.drawCard();
+
+    }
+
+
+
+    //state description
     public enum CurrentState{
         READY,CARD_SELECT,UNIT_SELECT
     }
@@ -54,6 +96,7 @@ public class GameState extends Subject {
         this.currentState = currentState;
     }
 
+    //store the card selected
 
     private Card cardSelected = null;
 
@@ -77,54 +120,10 @@ public class GameState extends Subject {
 
     private Player currentPlayer;
 
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    //switch player
-    public void switchPlayer() {
-        if (this.currentPlayer == playerContainers[0]){
-            //clear mana of previous player
-            this.currentPlayer.setMana(0);
-            this.currentPlayer = playerContainers[1];
-
-        }
-        else {
-            //clear mana of previous player
-            this.currentPlayer.setMana(0);
-            this.currentPlayer = playerContainers[0];
-        }
-
-        //update turn and mana
-        turnCount ++;
-        this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
-
-        //draw a card
-        this.currentPlayer.drawCard();
-
-    }
 
 
 
-    public enum CurrentState{
-        READY,CARD_SELECT,UNIT_SELECT
-    }
 
-    // current state
-    private CurrentState currentState = CurrentState.READY;
-    public CurrentState getCurrentState() {
-        return currentState;
-    }
-    public void setCurrentState(CurrentState currentState) {
-        this.currentState = currentState;
-    }
-
-
-    // selected card
-    private Card cardSelected = null;
-    public void setCardSelected(Card cardSelected) {
-        this.cardSelected = cardSelected;
-    }
 
 
     // selected tile
@@ -133,15 +132,7 @@ public class GameState extends Subject {
     public void setTileSelected(Tile tileSelected) { this.tileSelected = tileSelected; }
     public Tile getTileSelected() { return tileSelected; }
 
-    // current player
-    private Player currentPlayer;
 
-    public void setCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
-    }
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
 
     // current turn
     private int currentTurn;
@@ -180,6 +171,7 @@ public class GameState extends Subject {
 
     @Override
     public void broadcastEvent(Class target, Map<String,Object> parameters){
+        System.out.println();
         for (Observer observer:observers){
             observer.trigger(target,parameters);
         }

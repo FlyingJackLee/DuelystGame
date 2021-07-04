@@ -122,7 +122,6 @@ public class Initalize implements EventProcessor{
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",7);
-		parameters.put("tilex",7);
 		parameters.put("tiley",2);
 		parameters.put("unit",AiAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
@@ -130,11 +129,12 @@ public class Initalize implements EventProcessor{
 		//4.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
+
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
 
-		parameters.put("unitId",String.valueOf(ToolBox.humanAvatarId));
-		parameters.put("unit",humanAvatar);
+		parameters.put("unitId",ToolBox.humanAvatarId);
+
 
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
@@ -143,10 +143,7 @@ public class Initalize implements EventProcessor{
 		AiAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
-
-		parameters.put("unitId",String.valueOf(ToolBox.AIAvatarID));
-		parameters.put("unit",AiAvatar);
-
+		parameters.put("unitId",ToolBox.AIAvatarID);
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 

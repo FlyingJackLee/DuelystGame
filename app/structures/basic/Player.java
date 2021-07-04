@@ -236,6 +236,17 @@ public class Player {
 					}
 
 
+				}
+			}
+		}
+		//if it is a creature
+		else {
+			parameters = new HashMap<>();
+			parameters.put("type","validSummonRangeHighlight");
 
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		}
+
+	}
 }
-

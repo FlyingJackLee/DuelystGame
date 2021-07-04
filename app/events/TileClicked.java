@@ -48,11 +48,8 @@ public class TileClicked implements EventProcessor{
 			//if it is a creature
 			if (cardSelected.isCreatureOrSpell() == 1){
 
-
 				//create unit
 				Unit new_unit = cardSelected.cardToUnit();
-
-
 
 				//summon unit
 				parameters.put("type","summon");
@@ -62,17 +59,12 @@ public class TileClicked implements EventProcessor{
 				parameters.put("unit",new_unit);
 				GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
-
-
 				//set attack and health
 				parameters = new HashMap<>();
 				parameters.put("type","setUnit");
-				parameters.put("unitId",String.valueOf(cardSelected.getId()));
+				parameters.put("unitId",cardSelected.getId());
 
 				GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-
-
 
 
 			}

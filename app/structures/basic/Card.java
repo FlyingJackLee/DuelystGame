@@ -75,23 +75,7 @@ public class Card {
 
 
 
-	/*
-	 *
-	 * check a card is a spell or creature
-	 *
-	 * @return int -1:spell, 1:creature
-	 */
-	public int isCreatureOrSpell(){
 
-		//if it is a spell
-		if (this.getBigCard().getAttack() == -1){
-			return -1;
-		}
-		//if it is a creature
-		else {
-			return 1;
-		}
-	}
 
 
 	public Unit cardToUnit(){

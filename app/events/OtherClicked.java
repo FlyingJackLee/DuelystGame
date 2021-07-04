@@ -28,18 +28,29 @@ public class OtherClicked implements EventProcessor{
 		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
 
 			//clear card selected
-
 			GameState.getInstance().getCurrentPlayer().clearSelected();
 
 
 			//clear valid tiles highlight
-			parameters = new HashMap<>();
+			Map<String,Object> parameters = new HashMap<>();
 			parameters.put("type","textureReset");
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
 			//reset game current state
 			GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
 
+		}
+		else if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
+
+			GameState.getInstance().setTileSelected(null);
+
+			//clear valid tiles highlight
+			Map<String,Object> parameters = new HashMap<>();
+			parameters.put("type","textureReset");
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+			//reset game current state
+			GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
 		}
 		}
 

@@ -212,14 +212,14 @@ public class Tile extends Observer {
 									|| (parameters.get("range").equals("non_avatar") && this.unitOnTile.id < 99)
 									) {
 
-						this.setTileState(TileState.GREY);
+						this.setTileState(TileState.WHITE);
 					}
 					else if (parameters.get("range").equals("your_avatar")
 							//if it is a avatar
 							&& this.unitOnTile.id >= 99
 							//if it is the avatar of current player
 							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
-						this.setTileState(TileState.GREY);
+						this.setTileState(TileState.WHITE);
 					}
 				}
 
@@ -259,7 +259,7 @@ public class Tile extends Observer {
 				) {
 
 					//Change the backend texture state
-					this.setTileState(TileState.GREY);
+					this.setTileState(TileState.WHITE);
 
 				}
 			}
@@ -277,12 +277,35 @@ public class Tile extends Observer {
 				if ((Integer) parameters.get("tilex") == this.tilex
 						&& (Integer) parameters.get("tiley") == this.tiley) {
 
+
 					//summon from hand
 					Card cardSelected = (Card) parameters.get("card");
 					if(cardSelected != null){
 						//if it is not a valid tile, terminate
-						if (!this.tileState.equals(TileState.GREY)){
+						if (!this.tileState.equals(TileState.WHITE)){
 							return;
+						}
+					}
+
+					Unit unit = (Unit) parameters.get("unit");
+					unit.setPositionByTile(this);
+					this.unitOnTile = unit;
+					// render front-end
+					BasicCommands.drawUnit(GameState.getInstance().getOut(), unit, this);
+					// wait for the creation of the unit
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					//remove from hand
+					if(cardSelected != null){
+						GameState.getInstance().getCurrentPlayer().removeCardFromHand(cardSelected);
+					}
+
+				}
+			}
 
 			if (parameters.get("type").equals("tileClicked")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
@@ -403,7 +426,7 @@ public class Tile extends Observer {
 	}
 
 
-	public void moveHighlight () {
+	public void moveHighlight() {
 		Map<String, Object> newParameters;
 
 		int[] offsetx = new int[]{1, 1, -1, -1, 0, 0, 2, -2, 0, 0, 1, -1};

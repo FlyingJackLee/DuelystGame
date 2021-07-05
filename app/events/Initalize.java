@@ -10,7 +10,9 @@ import structures.GameState;
 import structures.basic.*;
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
+import utils.ToolBox;
 
+import javax.tools.Tool;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +32,8 @@ public class Initalize implements EventProcessor{
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
+		//clear the instance
+		GameState.getInstance().clearObservers();
 		//CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
 		//1. generate the tiles
@@ -63,12 +67,6 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.c_sundrop_elixir
 		};
 
-		for (int i = 0; i < 10; i++) {
-			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
-			humanPlayer.setDeck(card);
-			GameState.getInstance().add(card);
-		}
-
 		String[] deck2Cards = {
 				StaticConfFiles.c_planar_scout,
 				StaticConfFiles.c_rock_pulveriser,
@@ -81,32 +79,31 @@ public class Initalize implements EventProcessor{
 				StaticConfFiles.c_staff_of_ykir,
 				StaticConfFiles.c_entropic_decay
 		};
+
+		for (int i = 0; i < 10; i++) {
+			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
+			humanPlayer.setDeck(card);
+		}
+
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
 			AIPlayer.setDeck(card);
-			GameState.getInstance().add(card);
 		}
-
-		//register the players on gameState
-		GameState.getInstance().add(humanPlayer);
-		GameState.getInstance().add(AIPlayer);
 
 
 		BasicCommands.addPlayer1Notification(out, "Your turn", 2);
 
-		//4.update the mana
 		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","increaseMana");
-		parameters.put("mana","1");
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
+
 
 		//4.creat avatar for both players
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.humanAvatar,
-				0,Unit.class
+				ToolBox.humanAvatarId,Unit.class
 		);
 
 		humanAvatar.setOwner(humanPlayer);
+
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
@@ -117,7 +114,7 @@ public class Initalize implements EventProcessor{
 
 		Unit AiAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.aiAvatar,
-				1,Unit.class
+				ToolBox.AIAvatarID,Unit.class
 		);
 		GameState.getInstance().add(AiAvatar);
 
@@ -132,10 +129,13 @@ public class Initalize implements EventProcessor{
 		//4.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
+
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
-		parameters.put("unitId","0");
-		parameters.put("unit",humanAvatar);
+
+		parameters.put("unitId",ToolBox.humanAvatarId);
+
+
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 		//4.2 set attack/health of AiAvatar
@@ -143,108 +143,24 @@ public class Initalize implements EventProcessor{
 		AiAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
-		parameters.put("unitId","1");
-		parameters.put("unit",AiAvatar);
+		parameters.put("unitId",ToolBox.AIAvatarID);
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
 		//5.set player
-		GameState.getInstance().setCurrentPlayer(humanPlayer);
+		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
+
 
 		//6.human player draw 3 cards
-		parameters = new HashMap<>();
-		parameters.put("type","draw3Cards");
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
+		GameState.getInstance().getCurrentPlayer().drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
 
-
-		// test move and attack highlight
-		// Case 1: friend in move range not in attack range
-		Unit friend1 = BasicObjectBuilders.loadUnit(
-				StaticConfFiles.u_ironcliff_guardian,
-				2,Unit.class
-		);
-		GameState.getInstance().add(friend1);
-		friend1.setOwner(humanPlayer);
-		friend1.setAttack(3);
-		friend1.setHealth(10);
-		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",3);
-		parameters.put("tiley",2);
-		parameters.put("unit",friend1);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId","2");
-		parameters.put("unit",friend1);
+		//7.set all unit READY
+		parameters =  new HashMap<>();
+		parameters.put("type","unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
-		// Case 2: friend in attack range
-		Unit friend2 = BasicObjectBuilders.loadUnit(
-				StaticConfFiles.u_azurite_lion,
-				3,Unit.class
-		);
-		GameState.getInstance().add(friend2);
-		friend2.setOwner(humanPlayer);
-		friend2.setAttack(2);
-		friend2.setHealth(3);
-		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",1);
-		parameters.put("tiley",3);
-		parameters.put("unit",friend2);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId","3");
-		parameters.put("unit",friend2);
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-		// Case 3: enemy in attack range
-		Unit enemy1 = BasicObjectBuilders.loadUnit(
-				StaticConfFiles.u_windshrike,
-				4,Unit.class
-		);
-		GameState.getInstance().add(enemy1);
-		enemy1.setOwner(AIPlayer);
-		enemy1.setAttack(4);
-		enemy1.setHealth(3);
-		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",1);
-		parameters.put("tiley",1);
-		parameters.put("unit",enemy1);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId","4");
-		parameters.put("unit",enemy1);
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-		// case 4: enemy in move and attack range
-		Unit enemy2 = BasicObjectBuilders.loadUnit(
-				StaticConfFiles.u_windshrike,
-				5,Unit.class
-		);
-		GameState.getInstance().add(enemy2);
-		enemy2.setOwner(AIPlayer);
-		enemy2.setAttack(4);
-		enemy2.setHealth(3);
-		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",3);
-		parameters.put("tiley",3);
-		parameters.put("unit",enemy2);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId","5");
-		parameters.put("unit",enemy2);
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
 	}

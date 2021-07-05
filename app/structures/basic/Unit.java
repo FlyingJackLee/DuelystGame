@@ -23,52 +23,92 @@ import java.util.Map;
  */
 public class Unit extends Observer {
 
-
 	enum UnitState{
 		//the unit is ready after the next turn of summon
 		//TODO: switch in turn change
-		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED,READY_ATTACK
+		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
 
 	}
-
-
+	
 	private UnitState currentState= UnitState.NOT_READY;
 
 	public void setCurrentState(UnitState currentState) {
 		this.currentState = currentState;
 	}
+
 	public UnitState getCurrentState() { return currentState;}
 
-
-	private Player owner;
+	
+	private Player owner = GameState.getInstance().getCurrentPlayer();
 
 	public Player getOwner() {
 		return owner;
 	}
+
 	public void setOwner(Player owner) {
 		this.owner = owner;
 	}
+	
+	private Card bindCard = null;
 
+	public Card getBindCard() {
+		return bindCard;
+	}
 
-	private int remainAttackTime = 1;
-	public int getRemainAttackTime() {return remainAttackTime;}
-	public void setRemainAttackTime(int remainAttackTime) {	this.remainAttackTime = remainAttackTime;}
-
+	public void setBindCard(Card bindCard) {
+		this.bindCard = bindCard;
+	}
 
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
+
 	private int attack;
+
 	public void setAttack(int attack) {
 		this.attack = attack;
-	}
+		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), 
+				this, attack);}
+	
+
 	public int getAttack() {return attack;}
 
+
 	private int health;
+
 	public void setHealth(int health) {
 		this.health = health;
+		if(this.getBindCard()!=null) {// if this is not an avatar
+			this.healthSetter(this.getBindCard().getBigCard().getHealth());
+		}
+		else { // if this is an avatar, it has settled health
+			this.healthSetter(20);
+		}
 	}
+	
+	public void healthSetter(int limit) {
+		if ( this.health >= 1 ) {
+			if( this.health > limit) {
+				this.health = limit;
+			}
+			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
+		}	
+		else if (this.health <= 1){
+			this.health = 0;
+			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
+			BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
+			BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
+			
+			Map<String, Object> newParameters = new HashMap<>();
+			newParameters.put("type","deleteUnit");
+			newParameters.put("tilex",this.getPosition().getTilex());
+			newParameters.put("tiley",this.getPosition().getTiley());
+			GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+		}
+	}
+	
+
 	public int getHealth() { return health;	}
 
 	int id;
@@ -162,59 +202,64 @@ public class Unit extends Observer {
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
 		if (this.getClass().equals(target)){
-			if (parameters.get("type").equals("setUnit") && parameters.get("unit").equals(this)){
+			if(parameters.get("type").equals("setUnit")){
+				if ((Integer)parameters.get("unitId") == this.id){
 					BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
 					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
+				}
 			}
-			
-			else if(parameters.get("type").equals("attacked") && parameters.get("attackedUnit").equals(this)){
-				
-					Unit attacked = this;
-					Unit attacker = (Unit) parameters.get("attackerUnit");
-					
-					//Play attack animation.
-					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, 
-							UnitAnimationType.attack);
-					try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
-					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, 
-							UnitAnimationType.idle);
 
-					int attackedHealth = attacked.health - attacker.getAttack();
-					
-					//If attackedUnit survives, set health and counter attack.
-					if(attackedHealth >= 1){
-						this.setHealth(attackedHealth);
-						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, attacked.health);
-						
-						if(Integer.parseInt(parameters.get("counterAttack").toString()) == 1) {
-							Map<String, Object>newParameters = new HashMap<>();
-							newParameters.put("type", "attacked");
-							newParameters.put("attacked", attacker);
-							newParameters.put("attacker", attacked);
-							newParameters.put("counterAttack", false);
-							
-							GameState.getInstance().broadcastEvent(Unit.class, newParameters);
-					}
-					//If attacked Unit dies
-					else {			
-						//Play unit death animation
-							BasicCommands.setUnitHealth(GameState.getInstance().getOut(), attacked, 0);
-							BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacked, 
-									UnitAnimationType.death);
-							try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
-							
-							BasicCommands.deleteUnit(GameState.getInstance().getOut(), attacked);
-							
-						//Delete Unit from the tile
-							Tile thisTile = (Tile) parameters.get("attackedTile");
-							thisTile.setUnitOnTile(null);
-						}
-						
-					}
-				
-				
+			//TODO
+			else if(parameters.get("type").equals("unitBeReady")){
+				if (this.owner == GameState.getInstance().getCurrentPlayer()){
+					this.currentState =  UnitState.READY;
+				}
+			}
+
+//			else if(parameters.get("type").equals("findUnitList")){
+//				if (this.owner.equals(GameState.getInstance().getCurrentPlayer())){
+//					this.owner
+//
+//				}
+//
+//			}
+			
+			else if(parameters.get("type").equals("attacked")){
+				if(parameters.get("attackedUnit").equals(this)){
+					Unit attackedUnit = this;
+					Unit attackerUnit = (Unit) parameters.get("attackerUnit");
+					//Attack First time, allow counter attack.
+					attackedUnit.attacked(attackerUnit,true);
+				}
 			}
 		}
 	}
+	
+	public void attacked (Unit attacker, boolean allowCounterAttack) {
+		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
+		try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
 
+		this.setHealth(this.getHealth()- attacker.getAttack());
+			
+		// if this unit survives, is allow to counter attack, and the attacker is in the attack range
+		if(allowCounterAttack && this.health >=1
+					&& this.targetIsInAttackRange(attacker.getPosition().getTilex(), attacker.getPosition().getTiley())) {
+				attacker.attacked(this, false); //counter attack not allow attack.
+			}		
+		}
+
+	public boolean targetIsInAttackRange(int tilex,int tiley) {
+		int[] offsetx = new int[]{1,1,0,-1,-1,-1, 0, 1};
+		int[] offsety = new int[]{0,1,1, 1, 0,-1,-1,-1};
+		for (int i = 0; i < offsetx.length; i++) {
+			int newTileX = this.getPosition().getTilex() + offsetx[i];
+			int newTileY = this.getPosition().getTiley() + offsety[i];
+			if(tilex == newTileX && tiley == newTileY) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

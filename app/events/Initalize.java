@@ -48,7 +48,7 @@ public class Initalize implements EventProcessor{
 
 		//2.generate Players
 		Player humanPlayer = new Player(20, 0);
-		Player AIPlayer = new AIPlayer(20, 0);
+		AIPlayer AIPlayer = new AIPlayer(20, 0);
 
 		BasicCommands.setPlayer1Health(out, humanPlayer);
 		BasicCommands.setPlayer2Health(out, AIPlayer);
@@ -149,14 +149,21 @@ public class Initalize implements EventProcessor{
 
 		//5.set player
 		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
+		GameState.getInstance().setAi(AIPlayer);
+
 
 
 		//6.human player draw 3 cards
-		GameState.getInstance().getCurrentPlayer().drawCard();
-		GameState.getInstance().getCurrentPlayer().drawCard();
-		GameState.getInstance().getCurrentPlayer().drawCard();
+		humanPlayer.drawCard();
+		humanPlayer.drawCard();
+		humanPlayer.drawCard();
 
-		//7.set all unit READY
+		//7. AI player draw 3 cards
+		AIPlayer.drawCard();
+		AIPlayer.drawCard();
+		AIPlayer.drawCard();
+
+		//8.set all unit READY
 		parameters =  new HashMap<>();
 		parameters.put("type","unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);

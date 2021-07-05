@@ -3,10 +3,7 @@ package structures;
 import akka.actor.ActorRef;
 import commands.BasicCommands;
 import events.EventProcessor;
-import structures.basic.Card;
-import structures.basic.Player;
-import structures.basic.Tile;
-import structures.basic.Unit;
+import structures.basic.*;
 import utils.ToolBox;
 
 import java.util.ArrayList;
@@ -22,7 +19,13 @@ import java.util.Map;
  *
  */
 public class GameState extends Subject {
+
     private int turnCount = 0;
+
+    public int getTurnCount() {
+        return turnCount;
+    }
+
 
     private Player[] playerContainers = new Player[2];
 
@@ -47,14 +50,11 @@ public class GameState extends Subject {
 
     //switch player
     public void switchPlayer() {
+        //draw a card
+        this.currentPlayer.drawCard();
 
-        //let all unit be ready for this player
-        Map<String,Object> parameters =  new HashMap<>();
-        parameters.put("type","unitBeReady");
-        GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-
-
+        // set game state READY
+        this.currentState = CurrentState.READY;
 
         if (this.currentPlayer == playerContainers[0]){
             //clear mana of previous player
@@ -72,10 +72,29 @@ public class GameState extends Subject {
         turnCount ++;
         this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
 
-        //draw a card
-        this.currentPlayer.drawCard();
+        //let all unit be ready for this player
+        Map<String,Object> parameters =  new HashMap<>();
+        parameters.put("type","unitBeReady");
+        GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
+        if(this.currentPlayer.equals(playerContainers[1])){
+            ai.startUpAIMode();
+        }
 
     }
+
+    public AIPlayer getAi() {
+        return ai;
+    }
+
+    public void setAi(AIPlayer ai) {
+        this.ai = ai;
+    }
+
+    AIPlayer ai;
+
+
+
 
 
 
@@ -86,7 +105,8 @@ public class GameState extends Subject {
 
     private CurrentState currentState = CurrentState.READY;
 
-    public void setCurrentState(CurrentState currentState) { this.currentState = currentState; }
+    public void setCurrentState(CurrentState currentState) {
+        this.currentState = currentState; }
 
     public CurrentState getCurrentState() { return currentState; }
 
@@ -151,7 +171,6 @@ public class GameState extends Subject {
     private GameState(){
 
     }
-
     public void clear(){
         this.playerContainers = new Player[2];
         this.currentPlayer = null;

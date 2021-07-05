@@ -2,6 +2,8 @@ package structures.basic;
 
 import akka.util.Helpers;
 import commands.BasicCommands;
+import events.EventProcessor;
+import events.TileClicked;
 import org.ietf.jgss.GSSManager;
 import structures.GameState;
 import structures.Observer;
@@ -18,8 +20,8 @@ import java.util.*;
  */
 public class Player {
 
-	private List<Card> deck = new ArrayList<>();
-	private Card[] cardsOnHand  = new Card[6];
+	protected List<Card> deck = new ArrayList<>();
+	protected Card[] cardsOnHand  = new Card[6];
 
 	public void setDeck(Card ...cards){
 		for (Card card:cards) {
@@ -250,4 +252,6 @@ public class Player {
 		}
 
 	}
+
 }
+

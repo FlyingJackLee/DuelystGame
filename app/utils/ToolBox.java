@@ -23,6 +23,7 @@ public class ToolBox {
 
     //display tips for human player
     public static void logNotification(String message){
+
         BasicCommands.addPlayer1Notification(GameState.getInstance().getOut(), message, 2);
     }
 

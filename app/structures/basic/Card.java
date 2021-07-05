@@ -80,7 +80,7 @@ public class Card {
 
 	public Unit cardToUnit(){
 		String unit_path = this.cardname.split(" ")[0].toLowerCase(Locale.ROOT);
-		if (this.cardname.split(" ")[1].toLowerCase(Locale.ROOT) != ""){
+		if (this.cardname.split(" ").length > 1 && this.cardname.split(" ")[1].toLowerCase(Locale.ROOT) != ""){
 			unit_path += "_" + this.cardname.split(" ")[1].toLowerCase(Locale.ROOT);
 		}
 		unit_path = "conf/gameconfs/units/" + unit_path + ".json";

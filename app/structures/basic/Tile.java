@@ -67,12 +67,6 @@ public class Tile extends Observer {
 	}
 
 
-	private Set<Tile> attackableTiles = new HashSet<>();
-
-	public Set<Tile> getAttackableTiles() {
-		return attackableTiles;
-	}
-
 	@JsonIgnore
 	private static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
@@ -206,8 +200,8 @@ public class Tile extends Observer {
 									//if we need every unit.
 									|| parameters.get("range").equals("all")
 									//if we need all non-avtar unit and ti is the one.
-									|| (parameters.get("range").equals("non_avatar") && this.unitOnTile.id < 99)
-									) {
+									|| (parameters.get("range").equals("non_avatar") && this.unitOnTile.id < 99))
+					{
 
 						this.setTileState(TileState.WHITE);
 					}
@@ -217,6 +211,12 @@ public class Tile extends Observer {
 							//if it is the avatar of current player
 							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
 						this.setTileState(TileState.WHITE);
+					}
+					else if (parameters.get("range").equals("all_friends")
+							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())){
+						this.setTileState(TileState.WHITE);
+						GameState.getInstance().getAi().addOptionalTile(this);
+						try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 					}
 				}
 
@@ -307,20 +307,21 @@ public class Tile extends Observer {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley){
 					// if there is a friendly unit on tile
-					if (this.unitOnTile != null
-							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
+					if (this.unitOnTile != null){
+						if(this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())){
+							// if the unit hasn't moved or attack, it can move and attack
+							if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.READY)) {
+								GameState.getInstance().setTileSelected(this);
 
-						// if the unit hasn't moved or attack, it can move and attack
-						if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.READY)) {
-							GameState.getInstance().setTileSelected(this);
+								this.moveHighlight();
+							}
+							// if the unit has moved, it can't move but can attack, only highlight attack unit
+							else if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.HAS_MOVED)) {
+								GameState.getInstance().setTileSelected(this);
 
-							this.moveHighlight();
-						}
-						// if the unit has moved, it can't move but can attack, only highlight attack unit
-						else if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.HAS_MOVED)) {
-							GameState.getInstance().setTileSelected(this);
+								this.attackHighlight();
 
-							this.attackHighlight();
+							}
 
 						}
 					}
@@ -374,6 +375,7 @@ public class Tile extends Observer {
 			else if (parameters.get("type").equals("moveHighlight")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley){
+
 					if (this.unitOnTile == null) {
 						GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
 						this.setTileState(tileState.WHITE);
@@ -399,21 +401,22 @@ public class Tile extends Observer {
 					&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley){
 					this.unitOnTile = null;
 			}
-			else if (parameters.get("type").equals("clearHighlight")){
-				if (!this.tileState.equals(TileState.NORMAL)) {
-					// change the tile's texture
-					this.setTileState(TileState.NORMAL);
-
-					// reset the movable and attackable list
-					this.moveableTiles.clear();
-					this.attackableTiles.clear();
+			else if (parameters.get("type").equals("AI_FindOperateTile")){
+				if(this.tileState.equals(tileState.WHITE)){
+					GameState.getInstance().getAi().addWhiteTiles(this);
+				}
+				else if (this.tileState.equals(tileState.RED)){
+					GameState.getInstance().getAi().addRedTiles(this);
 				}
 			}
+
 		}
 	}
 
 
 	public void moveHighlight() {
+		this.setTileState(TileState.NORMAL);
+
 		Map<String, Object> newParameters;
 
 		int[] offsetx = new int[]{1, 1, -1, -1, 0, 0, 2, -2, 0, 0, 1, -1};
@@ -466,10 +469,10 @@ public class Tile extends Observer {
 		parameters.put("unit", beattacked);
 		parameters.put("attacker", attacker);
 		GameState.getInstance().broadcastEvent(Unit.class, parameters);
+		try { Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
 		// reset the game state
 		resetTileSelected();
-		try { Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 	}
 
 	public void move (Unit unit, Tile originTile){
@@ -484,9 +487,11 @@ public class Tile extends Observer {
 		// set unit state - HAS_MOVED
 		unit.setCurrentState(Unit.UnitState.HAS_MOVED);
 
+		originTile.getMoveableTiles().clear();
+		try { Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace(); }
+
 		// reset game state
 		resetTileSelected();
-		try { Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace(); }
 	}
 
 	// calculate the distance of two tiles
@@ -505,7 +510,7 @@ public class Tile extends Observer {
 			GameState.getInstance().setTileSelected(null);
 
 			Map<String, Object> parameters = new HashMap<>();
-			parameters.put("type","clearHighlight");
+			parameters.put("type","textureReset");
 			GameState.getInstance().broadcastEvent(Tile.class, parameters);
 		}
 	}

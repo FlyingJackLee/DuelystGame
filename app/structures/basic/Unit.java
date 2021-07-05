@@ -25,7 +25,7 @@ public class Unit extends Observer {
 
 
 
-	enum UnitState{
+	public enum UnitState{
 		//the unit is ready after the next turn of summon
 		//TODO: switch in turn change
 		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
@@ -216,12 +216,10 @@ public class Unit extends Observer {
 			}
 			//TODO
 			else if(parameters.get("type").equals("unitBeReady")){
-				if (this.owner == GameState.getInstance().getCurrentPlayer()){
+				if (this.owner.equals(GameState.getInstance().getCurrentPlayer())){
 					this.currentState =  UnitState.READY;
-				}
+				}else {this.currentState = UnitState.NOT_READY;}
 			}
-
+		}
 	}
-	}
-
 }

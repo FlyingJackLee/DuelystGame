@@ -16,10 +16,10 @@ import java.util.*;
  * @author Dr. Richard McCreadie
  *
  */
-public class Player extends Observer {
+public class Player {
 
 	private List<Card> deck = new ArrayList<>();
-	private List<Card> cardsOnHand  = new ArrayList<>();;
+	private Card[] cardsOnHand  = new Card[6];
 
 	public void setDeck(Card ...cards){
 		for (Card card:cards) {
@@ -29,20 +29,39 @@ public class Player extends Observer {
 
 	/*
 	 *
-	 * TODO
+	 * drawCard From deck
 	 *
-	 * @param  TODO
-	 * @return void TODO
 	 */
-	private void drawCard(){
+	public void drawCard(){
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
-		this.cardsOnHand.add(card);
-		BasicCommands.drawCard(GameState.getInstance().getOut(),
-				card,cardsOnHand.size()-1,0);
-	}
 
+		int i;
+
+		//find a blank space
+		for (i = 0; i < 6; i++) {
+			if(this.cardsOnHand[i] == null){
+				this.cardsOnHand[i] = card;
+				BasicCommands.drawCard(GameState.getInstance().getOut(),
+						card,i +1,0);
+				try {
+					Thread.sleep(ToolBox.delay);
+				}
+				//wait for the frontend
+				catch (InterruptedException e){e.printStackTrace();}
+				break;
+			}
+		}
+
+
+		if (i == 6){
+			//TODO : need to be test.
+			ToolBox.logNotification("You can have more card(exceed 6), discard this card.");
+		}
+
+
+	}
 
 	int health;
 	int mana;
@@ -71,44 +90,39 @@ public class Player extends Observer {
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(),this);
 	}
 
-	@Override
-	public void trigger(Class target, Map<String,Object> parameters) {
-		if (this.getClass().equals(target)){
-			if (parameters.get("type").equals("increaseMana")){
-				this.setMana(mana + Integer.parseInt((String) parameters.get("mana")));
-			}
 
-			else if (parameters.get("type").equals("draw3Cards")) {
-				drawCard();
-				drawCard();
-				drawCard();
-			}
+	//clear card from hand
+	public void removeCardFromHand(Card card){
 
-			else if (parameters.get("type").equals("cardClick")) {
-				int handPosition = (Integer) parameters.get("position");
-				//if the player has enough mana
-				if(cardsOnHand.get(handPosition).getManacost() <= this.mana){
-					//highlight card
-					cardSelected(handPosition);
-					//highlight valid tiles
-					showValidRange(handPosition);
+		//update the mana
+		this.setMana(mana-card.getManacost());
 
-					//store the card into gameState
-					GameState.getInstance().setCardSelected(cardsOnHand.get(handPosition));
-				}
-				else {
-					ToolBox.logNotification("Mana not enough");
-				}
 
-			}
+		//clear highlight
+		clearSelected();
 
-			else if (parameters.get("type").equals("cardSelectedReset")) {
-				cardSelected(-1);
-			}
-			else if (parameters.get("type").equals("cardApplied")) {
 
-			}
-		}
+		int index = ToolBox.findObjectInArray(this.cardsOnHand,card);
+
+
+		//remove from hand(backend and frontend)
+		BasicCommands.deleteCard(GameState.getInstance().getOut(),index+1);
+		try {
+			Thread.sleep(500);
+		}catch (InterruptedException e){e.printStackTrace();}
+		this.cardsOnHand[index] = null;
+
+		//remove form gameState
+		GameState.getInstance().setCardSelected(null);
+
+
+		//clear the range
+		Map<String,Object> parameters = new HashMap<>();
+		parameters.put("type","textureReset");
+		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+
+
 	}
 
 
@@ -116,29 +130,63 @@ public class Player extends Observer {
 	 *
 	 * set the card selected
 	 *
-	 * @param position:  0 ~ 6( at specific position), or -1(reset selected)
+	 * @param handPosition:  0 ~ 6( at specific position)
 	 */
-	private void cardSelected(int position){
+	public void cardSelected(int handPosition){
 
-		for (int i = 0; i < cardsOnHand.size(); i++) {
-			if (i == position){
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						cardsOnHand.get(i),i,1);
-				GameState.getInstance().setCardSelected(cardsOnHand.get(i));
-			}
-			else{
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						cardsOnHand.get(i),i,0);
-				GameState.getInstance().setCardSelected(null);
 
+		if (handPosition <0 || handPosition > 5 ){
+			return;
+		}
+
+		Card cardSelected = this.cardsOnHand[handPosition];
+
+		//if the player has enough mana
+		if(cardSelected.getManacost() <= this.mana){
+
+			//highlight card
+			//if the player have selected a card, reset the card highlight firstly
+			if ( GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT) ){
+				clearSelected();
 			}
+
+			//set backend
+			GameState.getInstance().setCardSelected(cardSelected);
+
+			//render frontend
+			BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
+					handPosition + 1
+					,1);
+
+			//highlight valid tiles
+			showValidRange(cardSelected);
+
+		}
+		else {
+			ToolBox.logNotification("Mana not enough");
+			return;
+		}
+
+
+	}
+
+	public void clearSelected(){
+		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
+
+			BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
+					ToolBox.findObjectInArray(cardsOnHand,GameState.getInstance().getCardSelected()) + 1
+					,0);
+
+			//clear backend
+			GameState.getInstance().setCardSelected(null);
+			GameState.getInstance().setTileSelected(null);
 
 
 		}
 	}
 
 
-	private void showValidRange(int position){
+	public void showValidRange(Card cardSelected){
 		Map<String,Object> parameters = new HashMap<>();
 
 		parameters.put("type","textureReset");
@@ -148,45 +196,46 @@ public class Player extends Observer {
 		try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
 
 
-		Card cardSelected = this.cardsOnHand.get(position);
-
-
 		//Calculate the target range of card
 		//if it is a spell
-		if (cardSelected.isCreatureOrSpell() == -1){
+		if (cardSelected.isCreatureOrSpell() == -1) {
 			String rule = cardSelected.getBigCard().getRulesTextRows()[0];
-
+			parameters = new HashMap<>();
+			parameters.put("type", "searchUnit");
 			//if the target is a unit
-			if (rule.contains("unit")){
-				parameters = new HashMap<>();
-				parameters.put("type","searchUnit");
+			if (rule.toLowerCase(Locale.ROOT).contains("unit")) {
 
 				//find all enemy Unit
-				if (rule.contains("enemy")){
-					parameters.put("range","enemy");
+				if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
+					parameters.put("range", "enemy");
 
 					//ask the tileS to give the list of enemy units and highlight them.
-					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
-				//find all  Unit
-				else {
-					parameters.put("range","all");
+				//find all non-avatar Unit
+				else if (rule.toLowerCase(Locale.ROOT).contains("non-avatar")) {
+					parameters.put("range", "non_avatar");
 					//ask the tileS to give the list of all units and highlight them.
-					GameState.getInstance().broadcastEvent(Tile.class,parameters);
+					GameState.getInstance().broadcastEvent(Tile.class, parameters);
+				}
+				//find all Unit
+				else {
+					parameters.put("range", "all");
+					//ask the tileS to give the list of all units and highlight them.
+					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
 			}
 
 			//if the target is a avatar
-			else if (rule.contains("avatar")) {
-				parameters = new HashMap<>();
-				parameters.put("type","searchUnit");
+			else if (rule.toLowerCase(Locale.ROOT).contains("avatar")) {
+				//find current avatar
+				if (rule.toLowerCase(Locale.ROOT).contains("your avatar")) {
+					{
+						parameters.put("range", "your_avatar");
+						//ask the tile to give the list of enemy units
+						GameState.getInstance().broadcastEvent(Tile.class, parameters);
+					}
 
-				//find all non avatar
-				//TODO
-				if (rule.contains("non-avatar")){
-					parameters.put("range","non-avatar");
-					//ask the tile to give the list of enemy units
-					GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
 				}
 			}
@@ -200,7 +249,5 @@ public class Player extends Observer {
 
 		}
 
-
 	}
-
 }

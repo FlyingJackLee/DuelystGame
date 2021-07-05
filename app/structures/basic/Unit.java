@@ -24,12 +24,14 @@ import java.util.Map;
 public class Unit extends Observer {
 
 
+
 	enum UnitState{
 		//the unit is ready after the next turn of summon
 		//TODO: switch in turn change
-		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED,READY_ATTACK
+		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
 
 	}
+
 
 
 	private UnitState currentState= UnitState.NOT_READY;
@@ -37,41 +39,40 @@ public class Unit extends Observer {
 	public void setCurrentState(UnitState currentState) {
 		this.currentState = currentState;
 	}
+
 	public UnitState getCurrentState() { return currentState;}
 
 
-	private Player owner;
+	private Player owner = GameState.getInstance().getCurrentPlayer();
 
 	public Player getOwner() {
 		return owner;
 	}
+
 	public void setOwner(Player owner) {
 		this.owner = owner;
 	}
-
-
-	private int remainAttackTime = 1;
-	public int getRemainAttackTime() {return remainAttackTime;}
-	public void setRemainAttackTime(int remainAttackTime) {	this.remainAttackTime = remainAttackTime;}
-
 
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
 
-
-
 	private int attack;
+
 	public void setAttack(int attack) {
 		this.attack = attack;
 	}
+
 	public int getAttack() {return attack;}
 
+
 	private int health;
+
 	public void setHealth(int health) {
 		this.health = health;
 	}
+
 	public int getHealth() { return health;	}
 
 	int id;
@@ -165,44 +166,62 @@ public class Unit extends Observer {
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
 		if (this.getClass().equals(target)){
-			if (parameters.get("type").equals("setUnit") && parameters.get("unit").equals(this)){
+			if(parameters.get("type").equals("setUnit")){
+				if ((Integer)parameters.get("unitId") == this.id){
 					BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
 					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
-			}
-			else if(parameters.get("type").equals("beAttacked") && parameters.get("unit").equals(this)){
-				Unit attacker = (Unit) parameters.get("attacker");
-				BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
-				try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
-
-				BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
-
-				this.setHealth(this.health - attacker.getAttack());
-				// enemy die
-				if(this.health < 1){
-					Map<String, Object> newParameters = new HashMap<>();
-					newParameters.put("type","unitDead");
-					newParameters.put("tilex",this.getPosition().getTilex());
-					newParameters.put("tiley",this.getPosition().getTiley());
-					GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
-					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
-					BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
 				}
-				else {
-					// if enemy alive
-					BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
-					// defense
-					if(!this.getCurrentState().equals(UnitState.HAS_ATTACKED)
-							&& !this.getCurrentState().equals(UnitState.READY_ATTACK)){
+			}
+
+			else if(parameters.get("type").equals("beAttacked")){
+				if(parameters.get("unit").equals(this)){
+					Unit attacker = (Unit) parameters.get("attacker");
+					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
+					try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+
+					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
+
+					this.setHealth(this.health - attacker.getAttack());
+					// enemy die
+					if(this.health < 1){
+
 						Map<String, Object> newParameters = new HashMap<>();
-						newParameters.put("type", "beAttacked");
-						newParameters.put("unit",attacker);
-						newParameters.put("attacker",this);
-						GameState.getInstance().broadcastEvent(Unit.class, newParameters);
+						newParameters.put("type","unitDead");
+						newParameters.put("tilex",this.getPosition().getTilex());
+						newParameters.put("tiley",this.getPosition().getTiley());
+						GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+
+						// set front-end health equals 0
+						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
+
+						// play animation
+						BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
+
+						// delete unit
+						BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
+					}
+					// if enemy alive
+					else {
+						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
+						// defense
+						if(!this.getCurrentState().equals(UnitState.HAS_ATTACKED)){
+							Map<String, Object> newParameters = new HashMap<>();
+							newParameters.put("type", "beAttacked");
+							newParameters.put("unit",attacker);
+							newParameters.put("attacker",this);
+							GameState.getInstance().broadcastEvent(Unit.class, newParameters);
+						}
 					}
 				}
 			}
-		}
+			//TODO
+			else if(parameters.get("type").equals("unitBeReady")){
+				if (this.owner == GameState.getInstance().getCurrentPlayer()){
+					this.currentState =  UnitState.READY;
+				}
+			}
+
+	}
 	}
 
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import akka.actor.ActorRef;
 import play.api.Play;
 import structures.GameState;
+import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
@@ -35,14 +36,47 @@ public class TileClicked implements EventProcessor{
 		int tiley = message.get("tiley").asInt();
 
 		Map<String,Object> parameters;
-//		parameters.put("type","clickUnit");
-//		parameters.put("tilex",tilex);
-//		parameters.put("tiley",tiley);
-//
-//		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
+
+
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 			parameters = new HashMap<>();
-			parameters.put("type","tileClicked");
+
+
+			//get card selected
+			Card cardSelected = GameState.getInstance().getCardSelected();
+
+			//if it is a creature
+			if (cardSelected.isCreatureOrSpell() == 1){
+
+				//create unit
+				Unit new_unit = cardSelected.cardToUnit();
+
+				//summon unit
+				parameters.put("type","summon");
+				parameters.put("tilex",tilex);
+				parameters.put("tiley",tiley);
+				parameters.put("card",cardSelected);
+				parameters.put("unit",new_unit);
+				GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+				//set attack and health
+				parameters = new HashMap<>();
+				parameters.put("type","setUnit");
+				parameters.put("unitId",cardSelected.getId());
+
+				GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
+
+			}
+			//if it is a spell
+			else {
+
+			}
+			}
+
+		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
+			parameters = new HashMap<>();
+			parameters.put("type","firstClickTile");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
@@ -53,20 +87,10 @@ public class TileClicked implements EventProcessor{
 			parameters.put("type", "operateUnit");
 			parameters.put("tilex",tilex);
 			parameters.put("tiley",tiley);
+			parameters.put("originTileSelected", GameState.getInstance().getTileSelected());
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
 		}
-
-		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
-			parameters = new HashMap<>();
-			parameters.put("type","cardApplied");
-			parameters.put("tilex",tilex);
-			parameters.put("tiley",tiley);
-			GameState.getInstance().broadcastEvent(Player.class,parameters);
-
-		}
-
-
 
 	}
 }

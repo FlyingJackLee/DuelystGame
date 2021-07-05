@@ -374,6 +374,7 @@ public class Tile extends Observer {
 			else if (parameters.get("type").equals("moveHighlight")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley){
+
 					if (this.unitOnTile == null) {
 						GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
 						this.setTileState(tileState.WHITE);
@@ -398,16 +399,6 @@ public class Tile extends Observer {
 					&& Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 					&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley){
 					this.unitOnTile = null;
-			}
-			else if (parameters.get("type").equals("clearHighlight")){
-				if (!this.tileState.equals(TileState.NORMAL)) {
-					// change the tile's texture
-					this.setTileState(TileState.NORMAL);
-
-					// reset the movable and attackable list
-					this.moveableTiles.clear();
-					this.attackableTiles.clear();
-				}
 			}
 		}
 	}
@@ -484,6 +475,9 @@ public class Tile extends Observer {
 		// set unit state - HAS_MOVED
 		unit.setCurrentState(Unit.UnitState.HAS_MOVED);
 
+		originTile.getMoveableTiles().clear();
+		originTile.getAttackableTiles().clear();
+
 		// reset game state
 		resetTileSelected();
 		try { Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace(); }
@@ -505,7 +499,7 @@ public class Tile extends Observer {
 			GameState.getInstance().setTileSelected(null);
 
 			Map<String, Object> parameters = new HashMap<>();
-			parameters.put("type","clearHighlight");
+			parameters.put("type","textureReset");
 			GameState.getInstance().broadcastEvent(Tile.class, parameters);
 		}
 	}

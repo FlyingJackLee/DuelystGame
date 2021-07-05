@@ -221,7 +221,13 @@ public class Unit extends Observer {
 				}
 			}
 
+//			else if(parameters.get("type").equals("findUnitList")){
+//				if (this.owner.equals(GameState.getInstance().getCurrentPlayer())){
+//					this.owner
+//
+//				}
+//
+//			}
+		}
 	}
-	}
-
 }

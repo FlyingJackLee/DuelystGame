@@ -32,6 +32,7 @@ public class CardClicked implements EventProcessor{
 
 		int handPosition = message.get("position").asInt() - 1;
 
+		if ()
 		GameState.getInstance().getCurrentPlayer().cardSelected(handPosition);
 
 

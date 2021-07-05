@@ -21,7 +21,6 @@ public class EndTurnClicked implements EventProcessor{
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 		GameState.getInstance().switchPlayer();
-		GameState.
 	}
 
 }

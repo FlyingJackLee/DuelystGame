@@ -24,7 +24,6 @@ import java.util.Map;
 public class GameState extends Subject {
     private int turnCount = 0;
 
-
     private Player[] playerContainers = new Player[2];
 
     public void addPlayers(Player humanPlayer,Player AIPlayer){
@@ -38,8 +37,6 @@ public class GameState extends Subject {
             this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
         }
     }
-
-
 
     private Player currentPlayer;
 
@@ -153,11 +150,6 @@ public class GameState extends Subject {
 
     private GameState(){
 
-    }
-
-    public boolean currentPlayerIsAIPlayer(){
-        if(currentPlayer.equals(playerContainers[1])){return true;}
-        return false;
     }
 
     public void clear(){

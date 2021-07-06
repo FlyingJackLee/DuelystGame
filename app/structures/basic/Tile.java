@@ -313,9 +313,22 @@ public class Tile extends Observer {
 						// if the unit hasn't moved or attack, it can move and attack
 						if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.READY)) {
 							GameState.getInstance().setTileSelected(this);
-
-							this.attackHighlight();
-							this.moveHighlight();
+							
+						// if the unit this tile has ranged attack ability
+						     if(this.unitOnTile.rangedAttack){ // if the unit have ranged attack ability
+								Map<String, Object> newParameters = new HashMap<>();
+								newParameters.put("type", "attackHighlight");
+								for(int i = 0; i < 9 ;i++) {
+										for(int j=0; j<5 ;j++) {
+										newParameters.put("tilex", i);
+										newParameters.put("tiley", j);
+										GameState.getInstance().broadcastEvent(Tile.class, newParameters);}
+								}
+								this.moveHighlight();
+							}else {
+								this.attackHighlight();
+								this.moveHighlight();
+							}
 							
 						}
 						// if the unit has moved, it can't move but can attack, only highlight attack unit
@@ -350,19 +363,13 @@ public class Tile extends Observer {
 
 					// case 3: RED - attack
 					else if (this.tileState.equals(tileState.RED)) {
-						boolean isRanged = false;
 						
 						// ranged attack
-						if(unit.getId()<=99) {// if this unit is not an avatar
-							String rule = unit.getBindCard().getBigCard().getRulesTextRows()[0];
-							if(rule.toLowerCase(Locale.ROOT).contains("ranged")) { // this card can ranged attack
-								isRanged = true;
-								this.attackedBroadcast(unit); //attack directly, no need to move
-							}
-						}
+						if(unit.rangedAttack) {
+							this.attackedBroadcast(unit);} //attack directly, no need to move
 						
 						// this is a normal unit
-						if(!isRanged) {
+						else if(!unit.rangedAttack) {
 							// case 3.1: attack after move
 							if (unit.getCurrentState().equals(Unit.UnitState.HAS_MOVED)){
 								//attack(unit, this.unitOnTile);
@@ -475,10 +482,10 @@ public class Tile extends Observer {
 								targetUnit.setHealth(0);
 							}
 						}
-						else if (rule.toLowerCase(Locale.ROOT).contains("over")) {
+						else if (rule.toLowerCase(Locale.ROOT).contains("health")) {
 							targetUnit.setHealth(targetUnit.getHealth() + 5);
 							}
-						else if (rule.toLowerCase(Locale.ROOT).contains("your avatar")) {
+						else if (rule.toLowerCase(Locale.ROOT).contains("gains")) {
 							if(targetUnit.getId() >= 99) { // if this is a friend avatar
 								targetUnit.setAttack(targetUnit.getAttack()+2);
 							}
@@ -551,19 +558,6 @@ public class Tile extends Observer {
 			}
 		}
 		
-		if(this.unitOnTile.getId()<99) {// if the unit this tile is not an avatar
-			String rule = this.unitOnTile.getBindCard().getBigCard().getCardTextures()[0];
-			if(rule.toLowerCase(Locale.ROOT).contains("ranged")) { // if the unit have ranged attack ability
-				
-				newParameters = new HashMap<>();
-				newParameters.put("type", "rangedUnitAttackHighlight");
-				for(int i = 0; i < 9 ;i++) {
-					for(int j=0; j<5 ;j++) {
-						GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-					}
-				}
-			}
-		}
 	}
 
 	public void attackedBroadcast (Unit attackerUnit){

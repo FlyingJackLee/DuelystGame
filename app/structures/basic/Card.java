@@ -89,10 +89,24 @@ public class Card {
 		//set health and attack
 		unit.setHealth(this.bigCard.getHealth());
 		unit.setAttack(this.bigCard.getAttack());
+		unit.setMaxHealth(this.bigCard.getHealth());
 		
-		//bind with card
-		unit.setBindCard(this);
-
+		//set special abilities
+		if(this.getBigCard().getRulesTextRows().length > 0) {
+			String rule = this.getBigCard().getRulesTextRows()[0];
+			if(rule.toLowerCase(Locale.ROOT).contains("ranged")) {
+				unit.rangedAttack = true;
+			}else unit.rangedAttack = false;
+			
+			if(rule.toLowerCase(Locale.ROOT).contains("airdrop")) {
+				unit.airDrop = true;
+			}else unit.airDrop = false;
+			
+			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
+				unit.attackTwice = true;
+			}else unit.attackTwice = false;
+		}
+		
 		return unit;
 	}
 

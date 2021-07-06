@@ -7,6 +7,7 @@ import structures.GameState;
 import structures.Observer;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -49,14 +50,9 @@ public class Unit extends Observer {
 		this.owner = owner;
 	}
 	
-	private Card bindCard = null;
-
-	public Card getBindCard() {
-		return bindCard;
-	}
-
-	public void setBindCard(Card bindCard) {
-		this.bindCard = bindCard;
+	private int maxHealth;
+	public void setMaxHealth(int maxHealth) {
+		this.maxHealth = maxHealth;
 	}
 
 
@@ -79,18 +75,9 @@ public class Unit extends Observer {
 
 	public void setHealth(int health) {
 		this.health = health;
-		if(this.getBindCard()!=null) {// if this is not an avatar
-			this.healthSetter(this.getBindCard().getBigCard().getHealth());
-		}
-		else { // if this is an avatar, it has settled health
-			this.healthSetter(20);
-		}
-	}
-	
-	public void healthSetter(int limit) {
 		if ( this.health >= 1 ) {
-			if( this.health > limit) {
-				this.health = limit;
+			if( this.health > maxHealth) {
+				this.health = maxHealth;
 			}
 			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
 		}	
@@ -108,6 +95,7 @@ public class Unit extends Observer {
 		}
 	}
 	
+	
 
 	public int getHealth() { return health;	}
 
@@ -117,7 +105,14 @@ public class Unit extends Observer {
 	UnitAnimationSet animations;
 	ImageCorrection correction;
 	
-	public Unit() {}
+	public Unit() {
+	}
+	
+	boolean rangedAttack = false; // can rangedAttack
+	boolean airDrop = false; // can summon everywhere
+	boolean flying = false; // can move anywhere
+	boolean attackTwice = false; // can attack twice one turn
+	
 	
 	public Unit(int id, UnitAnimationSet animations, ImageCorrection correction) {
 		super();
@@ -138,8 +133,6 @@ public class Unit extends Observer {
 		this.correction = correction;
 		this.animations = animations;
 	}
-	
-	
 	
 	public Unit(int id, UnitAnimationType animation, Position position, UnitAnimationSet animations,
 			ImageCorrection correction) {

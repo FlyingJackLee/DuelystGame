@@ -103,6 +103,7 @@ public class Initalize implements EventProcessor{
 		);
 
 		humanAvatar.setOwner(humanPlayer);
+		humanAvatar.setMaxHealth(20);
 
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
@@ -119,6 +120,7 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().add(AiAvatar);
 
 		AiAvatar.setOwner(AIPlayer);
+		AiAvatar.setMaxHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",7);

@@ -71,10 +71,10 @@ public class TileClicked implements EventProcessor{
 			//if it is a spell
 			else {
 				// play a spell on certain unit
+				
 				parameters.put("type", "spell");
 				parameters.put("tilex",tilex);
 				parameters.put("tiley",tiley);
-				parameters.put("card",cardSelected);
 				GameState.getInstance().broadcastEvent(Tile.class,parameters);
 			}
 		}

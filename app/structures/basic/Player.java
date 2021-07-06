@@ -1,10 +1,7 @@
 package structures.basic;
 
-import akka.util.Helpers;
 import commands.BasicCommands;
-import org.ietf.jgss.GSSManager;
 import structures.GameState;
-import structures.Observer;
 import utils.ToolBox;
 
 import java.util.*;
@@ -18,6 +15,7 @@ import java.util.*;
  */
 public class Player {
 
+
 	private List<Card> deck = new ArrayList<>();
 	private Card[] cardsOnHand  = new Card[6];
 
@@ -27,12 +25,44 @@ public class Player {
 		}
 	}
 
-	/*
+
+	/**
+	 *
+	 * check if this player is a human or AI
+	 *
+	 * @return boolean: true - human; false - AI
+	 */
+	public boolean isHumanOrAI(){
+
+		if (this == GameState.getInstance().getPlayerContainers()[0]){
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+
+	/**
 	 *
 	 * drawCard From deck
 	 *
 	 */
 	public void drawCard(){
+		//WIN/LOSE condition one
+		if (deck.size() == 0) {
+			if (this == GameState.getInstance().getPlayerContainers()[0]){
+				ToolBox.logNotification("AIPlayer has won!");
+
+			}
+			else {
+				ToolBox.logNotification("Human has won!");
+			}
+
+			return;
+		}
+
+
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
@@ -71,6 +101,8 @@ public class Player {
 		this.health = 20;
 		this.mana = 0;
 	}
+
+
 	public Player(int health, int mana) {
 		super();
 		this.health = health;
@@ -141,6 +173,7 @@ public class Player {
 
 		Card cardSelected = this.cardsOnHand[handPosition];
 
+
 		//if the player has enough mana
 		if(cardSelected.getManacost() <= this.mana){
 
@@ -160,6 +193,8 @@ public class Player {
 
 			//highlight valid tiles
 			showValidRange(cardSelected);
+
+
 
 		}
 		else {
@@ -245,6 +280,14 @@ public class Player {
 			parameters.put("type","validSummonRangeHighlight");
 
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+			//Callback Point: <CardSelectedCallBacks>
+			//call all call backs when card used
+			int id = cardSelected.id;
+			if (GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)) != null){
+				//call the callback
+				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
+			}
 
 		}
 

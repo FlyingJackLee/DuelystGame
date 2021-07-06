@@ -39,33 +39,16 @@ public class TileClicked implements EventProcessor{
 
 
 		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
-			parameters = new HashMap<>();
 
 
 			//get card selected
 			Card cardSelected = GameState.getInstance().getCardSelected();
 
+
 			//if it is a creature
 			if (cardSelected.isCreatureOrSpell() == 1){
 
-				//create unit
-				Unit new_unit = cardSelected.cardToUnit();
-
-				//summon unit
-				parameters.put("type","summon");
-				parameters.put("tilex",tilex);
-				parameters.put("tiley",tiley);
-				parameters.put("card",cardSelected);
-				parameters.put("unit",new_unit);
-				GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-				//set attack and health
-				parameters = new HashMap<>();
-				parameters.put("type","setUnit");
-				parameters.put("unitId",cardSelected.getId());
-
-				GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
+				cardSelected.creatureCardUsed(tilex,tiley);
 
 			}
 			//if it is a spell
@@ -73,6 +56,7 @@ public class TileClicked implements EventProcessor{
 
 			}
 			}
+
 
 		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
 			parameters = new HashMap<>();

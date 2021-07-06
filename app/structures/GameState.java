@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * This class can be used to hold information about the on-going game.
@@ -22,11 +24,44 @@ import java.util.Map;
  *
  */
 public class GameState extends Subject {
+
+
+    //format: "unitID": callback
+
+    //Integer: the id of card to be used.
+    private Map<String, Function<Integer,Boolean>> cardSelectedCallbacks = new HashMap<>();
+    //Integer: the id of card to be used.
+    private Map<String,Function<Integer,Boolean>> beforeSummonCallbacks = new HashMap<>();
+    //Integer: the id of unit to be attacked.
+    private Map<String,Function<Integer,Boolean>> avatarAttackCallbacks  = new HashMap<>();
+    //Integer: the id of unit has dead.
+    private Map<String,Function<Integer,Boolean>> unitDeathCallbacks  = new HashMap<>();
+
+    public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
+        return cardSelectedCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getAvatarAttackCallbacks() {
+        return avatarAttackCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
+        return beforeSummonCallbacks;
+    }
+    public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
+        return unitDeathCallbacks;
+    }
+
+
     private int turnCount = 0;
 
     private Player[] playerContainers = new Player[2];
 
-    public void addPlayers(Player humanPlayer,Player AIPlayer){
+    public Player[] getPlayerContainers() {
+        return playerContainers;
+    }
+
+    public void addPlayers(Player humanPlayer, Player AIPlayer){
         //make sure only allocate once
         if (playerContainers[0] == null && playerContainers[1] ==null){
             playerContainers[0] = humanPlayer;
@@ -41,6 +76,9 @@ public class GameState extends Subject {
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
+
+
+
 
 
     //switch player
@@ -80,6 +118,7 @@ public class GameState extends Subject {
     public enum CurrentState{
         READY,CARD_SELECT,UNIT_SELECT
     }
+
 
     private CurrentState currentState = CurrentState.READY;
 
@@ -168,12 +207,45 @@ public class GameState extends Subject {
 
     @Override
     public void broadcastEvent(Class target, Map<String,Object> parameters){
-        System.out.println();
         for (Observer observer:observers){
             observer.trigger(target,parameters);
         }
     }
 
+
+    public void registerCallbacks(){
+        //"Azure Herald"
+        this.beforeSummonCallbacks.put(String.valueOf("3"), new Function<Integer, Boolean>() {
+            @Override
+            public Boolean apply(Integer integer) {
+
+                            Map<String, Object> parameters = new HashMap<>();
+							parameters.put("type", "modifyUnit");
+
+							int unitId = -1;
+
+							//human player play now
+							if (GameState.getInstance().getCurrentPlayer().isHumanOrAI()) {
+								//human avatar id:99
+								unitId = 99;
+							} else {
+								//ai avatar id:99
+								unitId = 100;
+							}
+
+							parameters.put("unitId", unitId);
+							parameters.put("attack", 0);
+							parameters.put("health", 3);
+							parameters.put("limit","max");
+
+							GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+							return true;
+            }
+        });
+
+
+    }
 
 
 

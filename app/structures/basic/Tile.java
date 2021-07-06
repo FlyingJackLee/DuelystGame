@@ -229,7 +229,18 @@ public class Tile extends Observer {
 
 			//handle 2 -1 : find valid summon tile
 			else if (parameters.get("type").equals("validSummonRangeHighlight")) {
+				//EX: highlight all
+				if (parameters.get("airdrop") != null
+						&& parameters.get("airdrop").equals("activate")){
+					if (this.unitOnTile == null){
+						//Change the  texture state
+						this.setTileState(TileState.WHITE);
+						return;
+					}
+				}
 
+
+				//normally:
 				// a. find a friendly unit
 				if (this.unitOnTile != null && this.unitOnTile.getOwner() == GameState.getInstance().getCurrentPlayer()) {
 
@@ -278,9 +289,8 @@ public class Tile extends Observer {
 						&& (Integer) parameters.get("tiley") == this.tiley) {
 
 
-					//summon from hand
-					Card cardSelected = (Card) parameters.get("card");
-					if(cardSelected != null){
+					//if summon from hand, check if it is a valid tile
+					if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 						//if it is not a valid tile, terminate
 						if (!this.tileState.equals(TileState.WHITE)){
 							return;
@@ -300,12 +310,13 @@ public class Tile extends Observer {
 					}
 
 					//remove from hand
-					if(cardSelected != null){
-						GameState.getInstance().getCurrentPlayer().removeCardFromHand(cardSelected);
+					if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
+						GameState.getInstance().getCurrentPlayer().removeCardFromHand(GameState.getInstance().getCardSelected());
 					}
 
 				}
 			}
+
 
 			if (parameters.get("type").equals("tileClicked")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
@@ -475,6 +486,18 @@ public class Tile extends Observer {
 	}
 
 	public void attack (Unit attacker, Unit beattacked){
+
+		//Callback Point:<AvatarAttackCallBacks>
+		//if it is a avatar
+		if (attacker.id == 99 || attacker.id == 100){
+			int id = beattacked.id;
+			if (GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)) != null){
+				//call the callback
+				GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)).apply(id);
+			}
+		}
+
+
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("type", "beAttacked");
 		parameters.put("unit", beattacked);

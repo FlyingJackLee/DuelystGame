@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
+import utils.ToolBox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,14 @@ import java.util.Map;
  */
 public class Unit extends Observer {
 
+
+
+
+	private int maxHealth;
+
+	public void setMaxHealth(int maxHealth) {
+		this.maxHealth = maxHealth;
+	}
 
 	enum UnitState{
 		//the unit is ready after the next turn of summon
@@ -153,7 +162,21 @@ public class Unit extends Observer {
 	public void setAnimations(UnitAnimationSet animations) {
 		this.animations = animations;
 	}
-	
+
+	public void addAttack(int attackChange){
+		this.setAttack(this.attack + attackChange);
+		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
+
+	}
+
+	public void addHealth(int healthChange){
+		this.setHealth(this.health + healthChange);
+		BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
+
+	}
+
+
+
 	/**
 	 * This command sets the position of the Unit to a specified
 	 * tile.
@@ -163,7 +186,6 @@ public class Unit extends Observer {
 	public void setPositionByTile(Tile tile) {
 		position = new Position(tile.getXpos(),tile.getYpos(),tile.getTilex(),tile.getTiley());
 	}
-
 
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
@@ -194,6 +216,13 @@ public class Unit extends Observer {
 						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
 						BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
 						BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
+
+						//Callback Point:<UnitDeathCallBacks>
+						int id = this.id;
+						if (GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)) != null){
+							//call the callback
+							GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)).apply(id);
+						}
 					}
 					else {
 						// if enemy alive
@@ -214,6 +243,24 @@ public class Unit extends Observer {
 			else if(parameters.get("type").equals("unitBeReady")){
 				if (this.owner == GameState.getInstance().getCurrentPlayer()){
 					this.currentState =  UnitState.READY;
+				}
+			}
+
+			else if(parameters.get("type").equals("modifyUnit")){
+				if (this.id == (Integer) parameters.get("unitId")){
+					int newHealth = this.health + (Integer) parameters.get("health");
+					int newAttack = this.attack + (Integer) parameters.get("attack");
+
+					if (parameters.get("limit") != null
+							&& parameters.get("limit").equals("max")
+							&& newHealth > maxHealth){
+						ToolBox.logNotification("Cannot exceed the max health");
+						newHealth = maxHealth;
+					}
+
+					this.setAttack(newHealth);
+					this.setAttack(newAttack);
+
 				}
 			}
 

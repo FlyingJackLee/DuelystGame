@@ -4,15 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
 import commands.BasicCommands;
-import demo.CommandDemo;
-import org.checkerframework.checker.units.qual.A;
 import structures.GameState;
 import structures.basic.*;
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
 import utils.ToolBox;
 
-import javax.tools.Tool;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,7 +45,9 @@ public class Initalize implements EventProcessor{
 
 		//2.generate Players
 		Player humanPlayer = new Player(20, 0);
+
 		Player AIPlayer = new AIPlayer(20, 0);
+
 
 		BasicCommands.setPlayer1Health(out, humanPlayer);
 		BasicCommands.setPlayer2Health(out, AIPlayer);
@@ -82,11 +81,13 @@ public class Initalize implements EventProcessor{
 
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
+
 			humanPlayer.setDeck(card);
 		}
 
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
+
 			AIPlayer.setDeck(card);
 		}
 
@@ -103,6 +104,7 @@ public class Initalize implements EventProcessor{
 		);
 
 		humanAvatar.setOwner(humanPlayer);
+		humanAvatar.setMaxHealth(20);
 
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
@@ -119,6 +121,7 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().add(AiAvatar);
 
 		AiAvatar.setOwner(AIPlayer);
+		AiAvatar.setMaxHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",7);
@@ -157,6 +160,8 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().getCurrentPlayer().drawCard();
 
 
+		//7.register all callback
+		GameState.getInstance().registerCallbacks();
 
 	}
 

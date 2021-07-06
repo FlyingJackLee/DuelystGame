@@ -1,18 +1,14 @@
 package structures.basic;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.sslconfig.ssl.FakeChainedKeyStore;
 import commands.BasicCommands;
-import org.checkerframework.checker.guieffect.qual.UI;
 import structures.GameState;
 import structures.Observer;
-import utils.BasicObjectBuilders;
 
 /**
  * A basic representation of a tile on the game board. Tiles have both a pixel position
@@ -24,7 +20,45 @@ import utils.BasicObjectBuilders;
  */
 public class Tile extends Observer {
 
+	enum TileState {
+		NORMAL("normal", 0), WHITE("white", 1), RED("red", 2);
+
+		private String name;
+		private int mode;
+
+		private TileState(String name, int mode) {
+			this.name = name;
+			this.mode = mode;
+		}
+	}
+
+	private TileState tileState = TileState.NORMAL;
+	public TileState getTileState() {
+		return tileState;
+	}
+	public void setTileState(TileState tileState) {
+		this.tileState = tileState;
+		// render frontend
+		BasicCommands.drawTile(GameState.getInstance().getOut(), this, this.tileState.mode);
+	}
+
 	private Unit unitOnTile;
+	public Unit getUnitOnTile() {
+		return unitOnTile;
+	}
+	public void setUnitOnTile(Unit unitOnTile) {
+		this.unitOnTile = unitOnTile;
+	}
+
+	private Set<Tile> moveableTiles = new HashSet<>();
+	public Set<Tile> getMoveableTiles() {
+		return moveableTiles;
+	}
+
+	private Set<Tile> attackableTiles = new HashSet<>();
+	public Set<Tile> getAttackableTiles() {
+		return attackableTiles;
+	}
 
 	@JsonIgnore
 	private static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -37,8 +71,7 @@ public class Tile extends Observer {
 	int tilex;
 	int tiley;
 
-	public Tile() {
-	}
+	public Tile() {}
 
 	public Tile(String tileTexture, int xpos, int ypos, int width, int height, int tilex, int tiley) {
 		super();
@@ -125,60 +158,308 @@ public class Tile extends Observer {
 
 	/*
 	 *
-	 * The gameState will broadcast events and call this method
+	 * The GameState will broadcast events and call this method
 	 *
 	 * @param target: The Class of target object
 	 * @param parameters: extra parameters.
 	 */
 	@Override
-	public void trigger(Class target, Map<String, Object> parameters) {
-		if (this.getClass().equals(target)
-				&& (Integer) parameters.get("tilex") == this.tilex
-				&& (Integer) parameters.get("tiley") == this.tiley) {
-			if (parameters.get("type").equals("summon")) {
-				Unit unit = (Unit) parameters.get("unit");
-				unit.setPositionByTile(this);
-				this.unitOnTile = unit;
-				// render front-end
-				BasicCommands.drawUnit(GameState.getInstance().getOut(), unit, this);
-				// wait for the creation of the unit
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+	public void trigger(Class target, Map<String,Object> parameters) {
+		if (this.getClass().equals(target)) {
 
-			else if (parameters.get("type").equals("tileClicked")) {
+			// handle 1: find unit (all, avatar, (enemy) unit)
+			if (parameters.get("type").equals("searchUnit")) {
+				// if there is a unit on tile
 				if (this.unitOnTile != null) {
-					Map<String, Object> newParameters;
-					//  the tiles that the unit can move to
-					int[] offsetx = new int[]{-2,-1,-1,-1, 0, 0, 0, 0, 1, 1, 1, 2};
-					int[] offsety = new int[]{ 0,-1, 0, 1,-2,-1, 1, 2,-1, 0, 1, 0};
-					for (int i = 0; i < offsety.length; i++) {
-						int newTileX = tilex + offsetx[i];
-						int newTileY = tiley + offsety[i];
-						if (newTileX >= 0 && newTileY >= 0) {
-							newParameters = new HashMap<>();
-							newParameters.put("type", "tileHighlight");
-							newParameters.put("tilex", newTileX);
-							newParameters.put("tiley", newTileY);
-							GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+					if ( // if we need a enemy unit and it is the one
+							(parameters.get("range").equals("enemy") && this.unitOnTile.getOwner() != GameState.getInstance().getCurrentPlayer())
+									// if we need every unit
+									|| parameters.get("range").equals("all")
+									// if we need a non-avtar unit and it is the one
+									|| (parameters.get("range").equals("non_avatar") && this.unitOnTile.id < 99)) {
+						this.setTileState(TileState.WHITE);
+					}
+					else if (parameters.get("range").equals("your_avatar")
+							// if it is a avatar
+							&& this.unitOnTile.id >= 99
+							// if it is the avatar of current player
+							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
+						this.setTileState(TileState.WHITE);
+					}
+				}
+			}
+
+			// handle 2-1: find valid summon tile
+			else if (parameters.get("type").equals("validSummonRangeHighlight")) {
+				// find a friendly unit
+				if (this.unitOnTile != null && this.unitOnTile.getOwner() == GameState.getInstance().getCurrentPlayer()) {
+					int[] xpos = new int[] {-1, -1, -1, 0, 0, 1, 1, 1};
+					int[] ypos = new int[] {-1, 0, 1, -1, 1, -1, 0, 1};
+
+					// check all neighbour tiles
+					for (int i = 0; i < xpos.length; i++) {
+						parameters = new HashMap<>();
+						parameters.put("type", "validSummonRangeHighlight-checkNeighbour");
+						parameters.put("tilex", this.tilex + xpos[i]);
+						parameters.put("tiley", this.tiley + ypos[i]);
+						GameState.getInstance().broadcastEvent(Tile.class, parameters);
+					}
+				}
+			}
+
+			// handle 2-2: check if there is a unit on it
+			else if (parameters.get("type").equals("validSummonRangeHighlight-checkNeighbour")) {
+				if (this.unitOnTile == null
+						&& (Integer) parameters.get("tilex") == this.tilex
+						&& (Integer) parameters.get("tiley") == this.tiley) {
+					// change backend texture state
+					this.setTileState(TileState.WHITE);
+				}
+			}
+
+			// handle 3: reset tile texture
+			else if (parameters.get("type").equals("textureReset")) {
+				if (!this.tileState.equals(TileState.NORMAL)) {
+					// change backend texture state
+					this.setTileState(TileState.NORMAL);
+				}
+			}
+
+			// handle 4: summon a unit
+			else if (parameters.get("type").equals("summon")) {
+				if ((Integer) parameters.get("tilex") == this.tilex
+						&& (Integer) parameters.get("tiley") == this.tiley) {
+					// summon from hand
+					Card cardSelected = (Card) parameters.get("card");
+					if(cardSelected != null) {
+						// if it is not a valid tile, terminate
+						if (!this.tileState.equals(TileState.WHITE)) {
+							return;
 						}
 					}
-				} else {
-					// de-highlight the board
-					for (int i = 0; i < 9; i++) {
-						for (int j = 0; j < 5; j++) {
-							BasicCommands.drawTile(GameState.getInstance().getOut(), BasicObjectBuilders.loadTile(i, j), 0);
+					Unit unit = (Unit) parameters.get("unit");
+					unit.setPositionByTile(this);
+					this.unitOnTile = unit;
+					// render frontend
+					BasicCommands.drawUnit(GameState.getInstance().getOut(), unit, this);
+					// wait for creation of unit
+					try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+					// remove from hand
+					if(cardSelected != null) {
+						// card: Azure Herald
+						// Unit Ability: Heal
+						if (parameters.get("cardName").equals("Azure Herald")) {
+							if (this.unitOnTile.getOwner().getHealth() < 17) {
+								this.unitOnTile.getOwner().setHealth(this.unitOnTile.getOwner().getHealth()+3);
+							} else {
+								this.unitOnTile.getOwner().setHealth(20);
+							}
+						}
+
+						// card: Blaze Hound
+						else if (parameters.get("cardName").equals("Blaze Hound")) {
+							GameState.getInstance().getPlayerContainers()[0].drawCard();
+							GameState.getInstance().getPlayerContainers()[1].drawCard();
+						}
+
+						GameState.getInstance().getCurrentPlayer().removeCardFromHand(cardSelected);
+					}
+				}
+			}
+
+			// first click tile
+			if (parameters.get("type").equals("firstClickTile")) {
+				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+					// if there is a friendly unit on tile
+					if (this.unitOnTile != null
+							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
+
+						// if the unit hasn't moved or attack, it can move and attack
+						if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.READY)) {
+							GameState.getInstance().setTileSelected(this);
+							this.moveHighlight();
+						}
+
+						// if the unit has moved, it can't move but can attack, only highlight attack unit
+						else if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.HAS_MOVED)) {
+							GameState.getInstance().setTileSelected(this);
+							this.attackHighlight();
 						}
 					}
 				}
 			}
 
-			else if (parameters.get("type").equals("tileHighlight")) {
-				BasicCommands.drawTile(GameState.getInstance().getOut(), this, 1);
+			// second click tile
+			else if (parameters.get("type").equals("operateUnit")) {
+				Tile originTile = (Tile) parameters.get("originTileSelected");
+				Unit unit = originTile.getUnitOnTile();
+				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+
+					// case 1: NORMAL - reset
+					if (this.tileState.equals(tileState.NORMAL)) {
+						this.resetTileSelected();
+					}
+
+					// case 2: WHITE - move
+					else if (this.tileState.equals(tileState.WHITE)) {
+						this.move(unit, originTile);
+					}
+
+					// case 3: RED - attack
+					else if (this.tileState.equals(tileState.RED)) {
+
+						// case 3.1: attack after move
+						if (unit.getCurrentState().equals(Unit.UnitState.HAS_MOVED)) {
+							attack(unit, this.unitOnTile);
+						} else {
+
+							// case 3.2.1: attack directly
+							if (distanceOfTiles(originTile, this) <= 2) {
+								attack(unit, this.unitOnTile);
+							}
+
+							// case 3.2.2: move and attack automatically
+							else {
+								for (Tile x : originTile.getMoveableTiles()) {
+									if (x.getTileState().equals(TileState.WHITE) && distanceOfTiles(x, this) <= 2) {
+										x.move(unit, originTile);
+										attack(unit, this.unitOnTile);
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
 			}
+
+			else if (parameters.get("type").equals("moveHighlight")) {
+				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+					if (this.unitOnTile == null) {
+						GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
+						this.setTileState(tileState.WHITE);
+
+						// set the tile highlight which unit can attack after moving
+						this.attackHighlight();
+					}
+				}
+			}
+
+			else if (parameters.get("type").equals("attackHighlight")) {
+				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+					// if it is a enemy unit, set tile state to red
+					if (this.unitOnTile != null) {
+						if (!this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
+							this.setTileState(tileState.RED);
+						}
+					}
+				}
+			}
+
+			else if (parameters.get("type").equals("unitDead")
+					&& Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+					&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+					this.unitOnTile = null;
+			}
+		}
+	}
+
+	public void moveHighlight() {
+		Map<String,Object> newParameters;
+
+		int[] offsetx = new int[] {1, 1,-1,-1, 0, 0, 2,-2, 0, 0, 1,-1};
+		int[] offsety = new int[] {1,-1, 1,-1, 2,-2, 0, 0, 1,-1, 0, 0};
+
+		for (int i = 0; i < offsetx.length; i++) {
+			int newTileX = tilex + offsetx[i];
+			int newTileY = tiley + offsety[i];
+
+			if (newTileX >= 0 && newTileY >= 0) {
+				newParameters = new HashMap<>();
+				newParameters.put("type", "moveHighlight");
+				newParameters.put("tilex", newTileX);
+				newParameters.put("tiley", newTileY);
+				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+			}
+		}
+	}
+
+	public void attackHighlight() {
+		Map<String, Object> newParameters;
+
+		int[] offsetx = new int[] {1, 1, 0,-1,-1,-1, 0, 1};
+		int[] offsety = new int[] {0, 1, 1, 1, 0,-1,-1,-1};
+
+		for (int i = 0; i < offsetx.length; i++) {
+			int newTileX = tilex + offsetx[i];
+			int newTileY = tiley + offsety[i];
+
+			if (newTileX >= 0 && newTileY >= 0) {
+				newParameters = new HashMap<>();
+				newParameters.put("type", "attackHighlight");
+				newParameters.put("tilex", newTileX);
+				newParameters.put("tiley", newTileY);
+				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+			}
+		}
+	}
+
+	public void attack(Unit attacker, Unit beattacked) {
+		// set unit state - HAS_ATTACKED
+		attacker.setCurrentState(Unit.UnitState.HAS_ATTACKED);
+
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("type", "beAttacked");
+		parameters.put("unit", beattacked);
+		parameters.put("attacker", attacker);
+		GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+		// reset game state
+		resetTileSelected();
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+	}
+
+	public void move(Unit unit, Tile originTile) {
+		// move
+		unit.setPositionByTile(this);
+		this.setUnitOnTile(unit);
+		originTile.setUnitOnTile(null);
+
+		// play animation
+		BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
+
+		// set unit state - HAS_MOVED
+		unit.setCurrentState(Unit.UnitState.HAS_MOVED);
+
+		originTile.getMoveableTiles().clear();
+		originTile.getAttackableTiles().clear();
+
+		// reset game state
+		resetTileSelected();
+		try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+	}
+
+	// calculate the distance between two tiles
+	public int distanceOfTiles(Tile tile1, Tile tile2) {
+		int x_1 = tile1.getTilex();
+		int y_1 = tile1.getTiley();
+		int x_2 = tile2.getTilex();
+		int y_2 = tile2.getTiley();
+		int distance = (x_1 - x_2) * (x_1 - x_2) + (y_1 - y_2) * (y_1 - y_2);
+		return distance;
+	}
+
+	public void resetTileSelected() {
+		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)) {
+			// clear the tile selected
+			GameState.getInstance().setTileSelected(null);
+			Map<String,Object> parameters = new HashMap<>();
+			parameters.put("type", "textureReset");
+			GameState.getInstance().broadcastEvent(Tile.class, parameters);
 		}
 	}
 }

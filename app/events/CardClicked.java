@@ -1,6 +1,5 @@
 package events;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
@@ -24,19 +23,11 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
-public class CardClicked implements EventProcessor{
+public class CardClicked implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		
-		int handPosition = message.get("position").asInt();
-
-		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type","cardClick");
-		parameters.put("position",handPosition);
-
-		GameState.getInstance().broadcastEvent(Player.class,parameters);
-		
+		int handPosition = message.get("position").asInt() - 1;
+		GameState.getInstance().getCurrentPlayer().cardSelected(handPosition);
 	}
-
 }

@@ -1,8 +1,11 @@
 package structures.basic;
 
-
+import structures.GameState;
 import structures.Observer;
+import utils.BasicObjectBuilders;
 
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -14,19 +17,17 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
-public class Card extends Observer{
 
+public class Card {
 
 	int id;
-	
 	String cardname;
 	int manacost;
-	
 	MiniCard miniCard;
 	BigCard bigCard;
-	
+
 	public Card() {};
-	
+
 	public Card(int id, String cardname, int manacost, MiniCard miniCard, BigCard bigCard) {
 		super();
 		this.id = id;
@@ -35,7 +36,7 @@ public class Card extends Observer{
 		this.miniCard = miniCard;
 		this.bigCard = bigCard;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -67,10 +68,34 @@ public class Card extends Observer{
 		this.bigCard = bigCard;
 	}
 
+	public Unit cardToUnit() {
+		String unit_path = this.cardname.split(" ")[0].toLowerCase(Locale.ROOT);
+		if (this.cardname.split(" ")[1].toLowerCase(Locale.ROOT) != "") {
+			unit_path += "_" + this.cardname.split(" ")[1].toLowerCase(Locale.ROOT);
+		}
+		unit_path = "conf/gameconfs/units/" + unit_path + ".json";
 
-	@Override
-	public void trigger(Class target, Map<String,Object> parameters) {
-		if (this.getClass().equals(target)){
+		// create unit
+		Unit unit = BasicObjectBuilders.loadUnit(unit_path, id, Unit.class);
+
+		// register unit
+		GameState.getInstance().add(unit);
+
+		// set health and attack
+		unit.setHealth(this.bigCard.getHealth());
+		unit.setAttack(this.bigCard.getAttack());
+
+		return unit;
+	}
+
+	public int isCreatureOrSpell() {
+		// if it is a spell
+		if (this.getBigCard().getAttack() == -1) {
+			return -1;
+		}
+		// if it is a creature
+		else {
+			return 1;
 		}
 	}
 }

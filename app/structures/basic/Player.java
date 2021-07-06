@@ -243,10 +243,19 @@ public class Player {
 		//if it is a creature
 		else {
 			parameters = new HashMap<>();
-			parameters.put("type","validSummonRangeHighlight");
-
+			boolean airdrop = false;
+			
+			if(cardSelected.getBigCard().getRulesTextRows().length > 0) {
+				String rule = cardSelected.getBigCard().getRulesTextRows()[0];
+				if(rule.toLowerCase(Locale.ROOT).contains("airdrop")) {
+					airdrop = true;
+					parameters.put("type", "airdropSummonRangeHighlight");}
+			}
+			
+			if(!airdrop) {
+				parameters.put("type","validSummonRangeHighlight");}
+			
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
 		}
 
 	}

@@ -225,7 +225,7 @@ public class Tile extends Observer {
 
 			//handle 2 -1 : find valid summon tile
 			else if (parameters.get("type").equals("validSummonRangeHighlight")) {
-
+		
 				// a. find a friendly unit
 				if (this.unitOnTile != null && this.unitOnTile.getOwner() == GameState.getInstance().getCurrentPlayer()) {
 
@@ -258,6 +258,19 @@ public class Tile extends Observer {
 					this.setTileState(TileState.WHITE);
 
 				}
+			}
+			//hand 2 -3: if this card can be summoned anywhere on the board
+			else if (parameters.get("type").equals("airdropSummonRangeHighlight")) {
+				allBroadcast("airdropSummonRangeHighlight-checkAvaliable");
+			}
+			
+			else if (parameters.get("type").equals("airdropSummonRangeHighlight-checkAvaliable")) {
+				if(this.unitOnTile == null
+						&& (Integer) parameters.get("tilex") == this.tilex
+						&& (Integer) parameters.get("tiley") == this.tiley) {
+					this.setTileState(TileState.WHITE);
+				}
+				
 			}
 			//handle 3: reset tile texture
 			else if (parameters.get("type").equals("textureReset")) {
@@ -316,14 +329,15 @@ public class Tile extends Observer {
 							
 						// if the unit this tile has ranged attack ability
 						     if(this.unitOnTile.rangedAttack){ // if the unit have ranged attack ability
-								Map<String, Object> newParameters = new HashMap<>();
-								newParameters.put("type", "attackHighlight");
-								for(int i = 0; i < 9 ;i++) {
-										for(int j=0; j<5 ;j++) {
-										newParameters.put("tilex", i);
-										newParameters.put("tiley", j);
-										GameState.getInstance().broadcastEvent(Tile.class, newParameters);}
-								}
+						    	 allBroadcast("attackHighlight");
+//								Map<String, Object> newParameters = new HashMap<>();
+//								newParameters.put("type", "attackHighlight");
+//								for(int i = 0; i < 9 ;i++) {
+//										for(int j=0; j<5 ;j++) {
+//										newParameters.put("tilex", i);
+//										newParameters.put("tiley", j);
+//										GameState.getInstance().broadcastEvent(Tile.class, newParameters);}
+//								}
 								this.moveHighlight();
 							}else {
 								this.attackHighlight();
@@ -630,6 +644,17 @@ public class Tile extends Observer {
 			Map<String, Object> parameters = new HashMap<>();
 			parameters.put("type","textureReset");
 			GameState.getInstance().broadcastEvent(Tile.class, parameters);
+		}
+	}
+	
+	public static void allBroadcast(String type) {
+		Map<String, Object> newParameters = new HashMap<>();
+		newParameters.put("type", type);
+		for(int i = 0; i < 9 ;i++) {
+				for(int j=0; j<5 ;j++) {
+				newParameters.put("tilex", i);
+				newParameters.put("tiley", j);
+				GameState.getInstance().broadcastEvent(Tile.class, newParameters);}
 		}
 	}
 

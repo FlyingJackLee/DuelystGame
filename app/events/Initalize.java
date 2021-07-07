@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
 import commands.BasicCommands;
+import demo.CheckMoveLogic;
 import demo.CommandDemo;
 import org.checkerframework.checker.units.qual.A;
 import structures.GameState;
@@ -34,7 +35,7 @@ public class Initalize implements EventProcessor{
 
 		//clear the instance
 		GameState.getInstance().clearObservers();
-		//CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
+		//CheckMoveLogic.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
 		//1. generate the tiles
 		for (int i = 0; i < 9; i++) {
@@ -47,8 +48,10 @@ public class Initalize implements EventProcessor{
 		}
 
 		//2.generate Players
+		//2.generate Players
 		Player humanPlayer = new Player(20, 0);
-		AIPlayer AIPlayer = new AIPlayer(20, 0);
+
+		Player AIPlayer = new AIPlayer(20, 0);
 
 		BasicCommands.setPlayer1Health(out, humanPlayer);
 		BasicCommands.setPlayer2Health(out, AIPlayer);
@@ -103,6 +106,7 @@ public class Initalize implements EventProcessor{
 		);
 
 		humanAvatar.setOwner(humanPlayer);
+		humanAvatar.setMaxHealth(20);
 
 		GameState.getInstance().add(humanAvatar);
 		parameters = new HashMap<>();
@@ -119,6 +123,7 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().add(AiAvatar);
 
 		AiAvatar.setOwner(AIPlayer);
+		humanAvatar.setMaxHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",7);
@@ -149,7 +154,6 @@ public class Initalize implements EventProcessor{
 
 		//5.set player
 		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
-		GameState.getInstance().setAi(AIPlayer);
 
 
 
@@ -167,9 +171,6 @@ public class Initalize implements EventProcessor{
 		parameters =  new HashMap<>();
 		parameters.put("type","unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-
-
 	}
 
 }

@@ -24,6 +24,11 @@ public class BasicCommands {
 
 	private static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to turn java objects to Strings
 	
+	// An alternative class with a 'tell' implementation can be given if writing unit tests
+	// and need to have a null ActorRef. This should be null during normal operation.
+	public static DummyTell altTell = null;
+	
+	
 	/**
 	 * You can consider the contents of the user’s browser window a canvas that can be drawn upon. drawTile will draw 
 	 * the image of a board tile on the board. This command takes as input a Tile object and a visualisation mode (an 
@@ -40,7 +45,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "drawTile");
 			returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
 			returnMessage.put("mode", mode);
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -61,7 +67,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "drawUnit");
 			returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
 			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -81,7 +88,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "setUnitAttack");
 			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
 			returnMessage.put("attack", attack);
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -101,7 +109,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "setUnitHealth");
 			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
 			returnMessage.put("health", health);
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -121,7 +130,32 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "moveUnitToTile");
 			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
 			returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * This command moves a unit sprite from one tile to another. It takes in the unit’s object and the target Tile. 
+	 * Note that this command will start the movement, it may take multiple seconds for the movement to complete.
+	 * yfirst sets whether the move should move the unit vertically first before moving horizontally
+	 * @param out
+	 * @param yfirst
+	 * @param unit
+	 * @param tile
+	 */
+	@SuppressWarnings({"deprecation"})
+	public static void moveUnitToTile(ActorRef out, Unit unit, Tile tile, boolean yfirst) {
+		try {
+			ObjectNode returnMessage = Json.newObject();
+			returnMessage.put("messagetype", "moveUnitToTile");
+			returnMessage.put("yfirst", yfirst);
+			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
+			returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -145,7 +179,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "playUnitAnimation");
 			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
 			returnMessage.put("animation", animationToPlay.toString());
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -163,7 +198,8 @@ public class BasicCommands {
 			ObjectNode returnMessage = Json.newObject();
 			returnMessage.put("messagetype", "deleteUnit");
 			returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -182,7 +218,8 @@ public class BasicCommands {
 			ObjectNode returnMessage = Json.newObject();
 			returnMessage.put("messagetype", "setPlayer1Health");
 			returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -201,7 +238,8 @@ public class BasicCommands {
 			ObjectNode returnMessage = Json.newObject();
 			returnMessage.put("messagetype", "setPlayer2Health");
 			returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -220,7 +258,8 @@ public class BasicCommands {
 			ObjectNode returnMessage = Json.newObject();
 			returnMessage.put("messagetype", "setPlayer1Mana");
 			returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -239,7 +278,8 @@ public class BasicCommands {
 			ObjectNode returnMessage = Json.newObject();
 			returnMessage.put("messagetype", "setPlayer2Mana");
 			returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -262,7 +302,8 @@ public class BasicCommands {
 			returnMessage.put("card", mapper.readTree(mapper.writeValueAsString(card)));
 			returnMessage.put("position", position);
 			returnMessage.put("mode", mode);
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -278,7 +319,8 @@ public class BasicCommands {
 			ObjectNode returnMessage = Json.newObject();
 			returnMessage.put("messagetype", "deleteCard");
 			returnMessage.put("position", position);
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -298,7 +340,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "playEffectAnimation");
 			returnMessage.put("effect", mapper.readTree(mapper.writeValueAsString(effect)));
 			returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -318,7 +361,8 @@ public class BasicCommands {
 			returnMessage.put("messagetype", "addPlayer1Notification");
 			returnMessage.put("text", text);
 			returnMessage.put("seconds", displayTimeSeconds);
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -339,7 +383,8 @@ public class BasicCommands {
 			returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(startTile)));
 			returnMessage.put("targetTile", mapper.readTree(mapper.writeValueAsString(targetTile)));
 			returnMessage.put("mode", mapper.readTree(mapper.writeValueAsString(mode)));
-			out.tell(returnMessage, out);
+			if (altTell!=null) altTell.tell(returnMessage);
+			else out.tell(returnMessage, out);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

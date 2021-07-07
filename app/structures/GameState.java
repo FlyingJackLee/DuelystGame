@@ -27,7 +27,10 @@ public class GameState extends Subject {
     }
 
 
+
     private Player[] playerContainers = new Player[2];
+
+    public Player[] getPlayerContainers() { return playerContainers; }
 
     public void addPlayers(Player humanPlayer,Player AIPlayer){
         //make sure only allocate once
@@ -50,6 +53,12 @@ public class GameState extends Subject {
 
     //switch player
     public void switchPlayer() {
+
+        // reset texture
+        Map<String,Object> parameters =  new HashMap<>();
+        parameters.put("type","textureReset");
+        GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
         //draw a card
         this.currentPlayer.drawCard();
 
@@ -73,25 +82,15 @@ public class GameState extends Subject {
         this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
 
         //let all unit be ready for this player
-        Map<String,Object> parameters =  new HashMap<>();
+        parameters =  new HashMap<>();
         parameters.put("type","unitBeReady");
         GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
         if(this.currentPlayer.equals(playerContainers[1])){
-            ai.startUpAIMode();
+            ((AIPlayer)playerContainers[1]).startUpAIMode();
         }
 
     }
-
-    public AIPlayer getAi() {
-        return ai;
-    }
-
-    public void setAi(AIPlayer ai) {
-        this.ai = ai;
-    }
-
-    AIPlayer ai;
 
 
 
@@ -177,12 +176,12 @@ public class GameState extends Subject {
         this.currentState = CurrentState.READY;
         this.turnCount = 0;
         this.cardSelected = null;
+        this.tileSelected = null;
         super.clearObservers();
     }
 
     @Override
     public void broadcastEvent(Class target, Map<String,Object> parameters){
-        System.out.println();
         for (Observer observer:observers){
             observer.trigger(target,parameters);
         }

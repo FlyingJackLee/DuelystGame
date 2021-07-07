@@ -213,11 +213,12 @@ public class Tile extends Observer {
 						this.setTileState(TileState.WHITE);
 					}
 					else if (parameters.get("range").equals("all_friends")
-							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())){
-						this.setTileState(TileState.WHITE);
-						GameState.getInstance().getAi().addOptionalTile(this);
+							&& !this.unitOnTile.getOwner().isHumanOrAI()){
+						AIPlayer aiPlayer = (AIPlayer) GameState.getInstance().getCurrentPlayer();
+						aiPlayer.addToOptionalTile(this);
 						try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 					}
+
 				}
 
 			}
@@ -263,7 +264,6 @@ public class Tile extends Observer {
 				if (!this.tileState.equals(TileState.NORMAL)) {
 					//Change the backend texture state
 					this.setTileState(TileState.NORMAL);
-
 				}
 			}
 
@@ -322,7 +322,6 @@ public class Tile extends Observer {
 								this.attackHighlight();
 
 							}
-
 						}
 					}
 				}
@@ -342,8 +341,7 @@ public class Tile extends Observer {
 
 					// case 2: WHITE - move
 					else if (this.tileState.equals(tileState.WHITE)) {
-						// move
-						this.move(unit,originTile);
+						this.checkMoveVertically(originTile);
 					}
 
 					// case 3: RED - attack
@@ -361,7 +359,9 @@ public class Tile extends Observer {
 							else {
 								for (Tile x : originTile.getMoveableTiles()) {
 									if (x.getTileState().equals(TileState.WHITE) && distanceOfTiles(x, this) <= 2) {
-										x.move(unit,originTile);
+										x.checkMoveVertically(originTile);
+										try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+
 										attack(unit, this.unitOnTile);
 										break;
 									}
@@ -403,11 +403,26 @@ public class Tile extends Observer {
 			}
 			else if (parameters.get("type").equals("AI_FindOperateTile")){
 				if(this.tileState.equals(tileState.WHITE)){
-					GameState.getInstance().getAi().addWhiteTiles(this);
+					((AIPlayer) GameState.getInstance().getCurrentPlayer()).addToWhiteGroup(this);
 				}
 				else if (this.tileState.equals(tileState.RED)){
-					GameState.getInstance().getAi().addRedTiles(this);
+					((AIPlayer) GameState.getInstance().getCurrentPlayer()).addToRedGroup(this);
 				}
+
+			}
+			else if (parameters.get("type").equals("checkMoveVertically")
+					&& Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+					&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley){
+				Tile originTile = (Tile) parameters.get("originTile");
+				Tile aimTile = (Tile) parameters.get("aimTile");
+
+				// if state is NORMAL, means can't move to aim tile by old route
+				if(this.tileState.equals(tileState.NORMAL)){
+					aimTile.move(originTile.getUnitOnTile(), originTile,true);
+				}else {
+					aimTile.move(originTile.getUnitOnTile(),originTile,false);
+				}
+
 			}
 
 		}
@@ -415,7 +430,6 @@ public class Tile extends Observer {
 
 
 	public void moveHighlight() {
-		this.setTileState(TileState.NORMAL);
 
 		Map<String, Object> newParameters;
 
@@ -469,30 +483,68 @@ public class Tile extends Observer {
 		parameters.put("unit", beattacked);
 		parameters.put("attacker", attacker);
 		GameState.getInstance().broadcastEvent(Unit.class, parameters);
-		try { Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
 		// reset the game state
 		resetTileSelected();
 	}
 
-	public void move (Unit unit, Tile originTile){
-		// move
+	/**
+	 *
+	 * check whether a unit need to move horizontally then vertically
+	 * @param originTile
+	 */
+	public void checkMoveVertically(Tile originTile){
+		Map<String, Object> parameters;
+
+		// if a tile move 2 steps, and every step in different direction
+		if(distanceOfTiles(this,originTile) == 2){
+			// check the state of original tile's left or right
+			int checkTileX = this.tilex;
+			int checkTileY = originTile.getTiley();
+
+			parameters = new HashMap<>();
+			parameters.put("type", "checkMoveVertically");
+			parameters.put("tilex", checkTileX);
+			parameters.put("tiley", checkTileY);
+			parameters.put("originTile", originTile);
+			parameters.put("aimTile", this);
+			GameState.getInstance().broadcastEvent(Tile.class, parameters);
+		}else this.move(originTile.getUnitOnTile(),originTile,false);
+	}
+	/**
+	 *
+	 * @param unit Unit: the unit ready to move
+	 * @param originTile Tile: tile before moving
+	 * @param mode  boolean false - move horizontally then vertically, true - vertically then horizontally
+	 */
+	public void move (Unit unit, Tile originTile, boolean mode){
+		// clear highlight
+		resetTileSelected();
+		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+
+		// front-end: play animation
+		if(mode) {
+			BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this,true);
+		}
+		else {
+			BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
+		}
+
+		try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+
+
+		// back-end: unit move to tile
 		unit.setPositionByTile(this);
 		this.setUnitOnTile(unit);
 		originTile.setUnitOnTile(null);
 
-		// play animation
-		BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
-
 		// set unit state - HAS_MOVED
 		unit.setCurrentState(Unit.UnitState.HAS_MOVED);
 
-		originTile.getMoveableTiles().clear();
-		try { Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace(); }
-
 		// reset game state
-		resetTileSelected();
+		originTile.getMoveableTiles().clear();
 	}
+
 
 	// calculate the distance of two tiles
 	public int distanceOfTiles (Tile tile1, Tile tile2){
@@ -505,14 +557,12 @@ public class Tile extends Observer {
 	}
 
 	public void resetTileSelected(){
-		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
-			// clear the tile selected
-			GameState.getInstance().setTileSelected(null);
+		// clear the tile selected
+		GameState.getInstance().setTileSelected(null);
 
-			Map<String, Object> parameters = new HashMap<>();
-			parameters.put("type","textureReset");
-			GameState.getInstance().broadcastEvent(Tile.class, parameters);
-		}
+		Map<String, Object> parameters = new HashMap<>();
+		parameters.put("type","textureReset");
+		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 	}
 
 

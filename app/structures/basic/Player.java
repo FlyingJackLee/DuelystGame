@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class Player {
 
-	protected List<Card> deck = new ArrayList<>();
+	private List<Card> deck = new ArrayList<>();
 	protected Card[] cardsOnHand  = new Card[6];
 
 	public void setDeck(Card ...cards){
@@ -29,7 +29,8 @@ public class Player {
 		}
 	}
 
-	/*
+
+	/**
 	 *
 	 * drawCard From deck
 	 *
@@ -45,8 +46,10 @@ public class Player {
 		for (i = 0; i < 6; i++) {
 			if(this.cardsOnHand[i] == null){
 				this.cardsOnHand[i] = card;
-				BasicCommands.drawCard(GameState.getInstance().getOut(),
-						card,i +1,0);
+				if(this.isHumanOrAI()){
+					BasicCommands.drawCard(GameState.getInstance().getOut(),
+							card,i +1,0);
+				}
 				try {
 					Thread.sleep(ToolBox.delay);
 				}
@@ -107,8 +110,10 @@ public class Player {
 		int index = ToolBox.findObjectInArray(this.cardsOnHand,card);
 
 
-		//remove from hand(backend and frontend)
-		BasicCommands.deleteCard(GameState.getInstance().getOut(),index+1);
+		if(this.isHumanOrAI()){
+			//remove from hand(backend and frontend)
+			BasicCommands.deleteCard(GameState.getInstance().getOut(),index+1);
+		}
 		try {
 			Thread.sleep(500);
 		}catch (InterruptedException e){e.printStackTrace();}
@@ -156,16 +161,20 @@ public class Player {
 			GameState.getInstance().setCardSelected(cardSelected);
 
 			//render frontend
-			BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
-					handPosition + 1
-					,1);
+			if(this.isHumanOrAI()){
+				BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
+						handPosition + 1
+						,1);
+			}
 
 			//highlight valid tiles
 			showValidRange(cardSelected);
 
 		}
 		else {
-			ToolBox.logNotification("Mana not enough");
+			if(this.isHumanOrAI()){
+				ToolBox.logNotification("Mana not enough");
+			}
 			return;
 		}
 
@@ -175,9 +184,11 @@ public class Player {
 	public void clearSelected(){
 		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 
-			BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
-					ToolBox.findObjectInArray(cardsOnHand,GameState.getInstance().getCardSelected()) + 1
-					,0);
+			if(this.isHumanOrAI()){
+				BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
+						ToolBox.findObjectInArray(cardsOnHand,GameState.getInstance().getCardSelected()) + 1
+						,0);
+			}
 
 			//clear backend
 			GameState.getInstance().setCardSelected(null);
@@ -251,6 +262,22 @@ public class Player {
 
 		}
 
+	}
+
+	/**
+	 *
+	 * check if this player is a human or AI
+	 *
+	 * @return boolean: true - human; false - AI
+	 */
+	public boolean isHumanOrAI(){
+
+		if (this == GameState.getInstance().getPlayerContainers()[0]){
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 }

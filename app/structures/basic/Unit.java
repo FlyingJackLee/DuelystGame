@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
+import utils.ToolBox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +52,12 @@ public class Unit extends Observer {
 
 	public void setOwner(Player owner) {
 		this.owner = owner;
+	}
+
+	private int maxHealth;
+
+	public void setMaxHealth(int maxHealth) {
+		this.maxHealth = maxHealth;
 	}
 
 
@@ -176,29 +183,41 @@ public class Unit extends Observer {
 			else if(parameters.get("type").equals("beAttacked")){
 				if(parameters.get("unit").equals(this)){
 					Unit attacker = (Unit) parameters.get("attacker");
+
+					// front-end
+					// play attack animation
 					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
 					try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
 
+					// recover idle
 					BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
 
 					this.setHealth(this.health - attacker.getAttack());
+
 					// enemy die
 					if(this.health < 1){
+						// front-end
+						// play animation
+						BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
 
+						// delete unit
+						BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
+
+						// back-end
 						Map<String, Object> newParameters = new HashMap<>();
 						newParameters.put("type","unitDead");
 						newParameters.put("tilex",this.getPosition().getTilex());
 						newParameters.put("tiley",this.getPosition().getTiley());
 						GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 
-						// set front-end health equals 0
-						BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
-
-						// play animation
-						BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
-
-						// delete unit
-						BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
+						// decide the winner
+						if(this.id == 99){
+							ToolBox.logNotification("You Lost!");
+							try {Thread.sleep(100000000);} catch (InterruptedException e) {e.printStackTrace();}
+						}
+						else if (this.id == 100) {
+							ToolBox.logNotification("You Win!");
+							try {Thread.sleep(100000000);} catch (InterruptedException e) {e.printStackTrace();}}
 					}
 					// if enemy alive
 					else {

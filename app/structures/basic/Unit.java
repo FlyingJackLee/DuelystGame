@@ -32,9 +32,6 @@ public class Unit extends Observer {
 
 	private int maxHealth;
 
-	public void setMaxHealth(int maxHealth) {
-		this.maxHealth = maxHealth;
-	}
 
 	public enum UnitState{
 		//the unit is ready after the next turn of summon
@@ -67,7 +64,6 @@ public class Unit extends Observer {
 	}
 
 
-	private int maxHealth;
 
 	public void setMaxHealth(int maxHealth) {
 		this.maxHealth = maxHealth;
@@ -90,10 +86,7 @@ public class Unit extends Observer {
 
 	private int health;
 
-	public int getAttack() {return attack;}
-
-
-	private int health;
+	public int getHealth() {return health;}
 
 	public void setHealth(int health) {
 		this.health = health;
@@ -116,12 +109,8 @@ public class Unit extends Observer {
 			GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 		}
 	}
-	
-	
 
-	public int getHealth() { return health;	}
 
-	public int getHealth() { return health;	}
 
 	int id;
 	UnitAnimationType animation;

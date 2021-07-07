@@ -1,19 +1,14 @@
 package structures;
 
 import akka.actor.ActorRef;
-import commands.BasicCommands;
-import events.EventProcessor;
 import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
-import utils.ToolBox;
+import structures.basic.AIPlayer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -24,9 +19,6 @@ import java.util.function.Function;
  *
  */
 public class GameState extends Subject {
-    private int turnCount = 0;
-
-
     //format: "unitID": callback
 
     //Integer: the id of card to be used.
@@ -79,6 +71,9 @@ public class GameState extends Subject {
     }
 
 
+
+
+
     //switch player
     public void switchPlayer() {
 
@@ -92,6 +87,7 @@ public class GameState extends Subject {
             //clear mana of previous player
             this.currentPlayer.setMana(0);
             this.currentPlayer = playerContainers[1];
+
 
         }
         else {
@@ -108,7 +104,6 @@ public class GameState extends Subject {
         this.currentPlayer.drawCard();
 
     }
-
 
 
     //state description
@@ -154,289 +149,40 @@ public class GameState extends Subject {
     private Player currentPlayer;
 
 
-
-
-
-
-
     // selected tile
     private Tile tileSelected = null;
 
-    public void setTileSelected(Tile tileSelected) {
-        this.tileSelected = tileSelected;
-        if (this.tileSelected == null){ this.currentState = CurrentState.READY; }
-        else { this.currentState = CurrentState.UNIT_SELECT; }
-    }
-
-    public void setTileNull() {
-        this.tileSelected = null;
-    }
-
+    public void setTileSelected(Tile tileSelected) { this.tileSelected = tileSelected; }
     public Tile getTileSelected() { return tileSelected; }
 
 
-    private int turnCount = 0;
 
-    public int getTurnCount() {
-        return turnCount;
-    }
-
-
-
-    private Player[] playerContainers = new Player[2];
-
-    public Player[] getPlayerContainers() { return playerContainers; }
-
-    public void addPlayers(Player humanPlayer,Player AIPlayer){
-        //make sure only allocate once
-        if (playerContainers[0] == null && playerContainers[1] ==null){
-            playerContainers[0] = humanPlayer;
-            playerContainers[1] = AIPlayer;
-
-            this.currentPlayer = humanPlayer;
-            turnCount ++;
-            this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
-        }
-    }
-
-    private Player currentPlayer;
-
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-
-    //switch player
-    public void switchPlayer() {
-
-        // reset texture
-        Map<String,Object> parameters =  new HashMap<>();
-        parameters.put("type","textureReset");
-        GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-        //draw a card
-        this.currentPlayer.drawCard();
-
-        // set game state READY
-        this.currentState = CurrentState.READY;
-
-        if (this.currentPlayer == playerContainers[0]){
-            //clear mana of previous player
-            this.currentPlayer.setMana(0);
-            this.currentPlayer = playerContainers[1];
-
-        }
-        else {
-            //clear mana of previous player
-            this.currentPlayer.setMana(0);
-            this.currentPlayer = playerContainers[0];
-        }
-
-        //update turn and mana
-        turnCount ++;
-        this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
-
-        //let all unit be ready for this player
-        parameters =  new HashMap<>();
-        parameters.put("type","unitBeReady");
-        GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-        if(this.currentPlayer.equals(playerContainers[1])){
-            ((AIPlayer)playerContainers[1]).startUpAIMode();
-        }
-
-    }
-
-
-
-
-
-
-    //state description
-    public enum CurrentState{
-        READY,CARD_SELECT,UNIT_SELECT
-    }
-
-    private CurrentState currentState = CurrentState.READY;
-
-    public void setCurrentState(CurrentState currentState) {
-        this.currentState = currentState; }
-
-    public CurrentState getCurrentState() { return currentState; }
-
-
-
-    //store the card selected
-
-    private Card cardSelected = null;
-
-    public void setCardSelected(Card cardSelected) {
-
-        this.cardSelected = cardSelected;
-        if (cardSelected == null){
-            this.currentState = CurrentState.READY;
-        }
-        else
-        {
-            this.currentState = CurrentState.CARD_SELECT;
-
-        }
-
-    }
-
-    public Card getCardSelected() {
-        return cardSelected;
-    }
-
-
-    // selected tile
-    private Tile tileSelected = null;
-
-    public void setTileSelected(Tile tileSelected) {
-        this.tileSelected = tileSelected;
-        if (this.tileSelected == null){ this.currentState = CurrentState.READY; }
-        else { this.currentState = CurrentState.UNIT_SELECT; }
-    }
-
-    public void setTileNull() {
-        this.tileSelected = null;
-    }
-
-    public Tile getTileSelected() { return tileSelected; }
+    // current turn
+    private int currentTurn;
+    public int getCurrentTurn() { return currentTurn;}
 
 
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
 
-    // Integer: the id of card to be used
-    private Map<String, Function<Integer, Boolean>> cardSelectedCallbacks = new HashMap<>();
-    // Integer: the id of card to be used
-    private Map<String, Function<Integer, Boolean>> beforeSummonCallbacks = new HashMap<>();
-    // Integer: the id of unit to be attacked
-    private Map<String, Function<Integer, Boolean>> avatarAttackCallbacks = new HashMap<>();
-    // Integer: the id of unit has dead
-    private Map<String, Function<Integer, Boolean>> unitDeathCallbacks = new HashMap<>();
+    public void setOut(ActorRef out) {
+        this.out = out;
 
-    public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
-        return cardSelectedCallbacks;
     }
 
-    public Map<String, Function<Integer, Boolean>> getAvatarAttackCallbacks() {
-        return avatarAttackCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
-        return beforeSummonCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
-        return unitDeathCallbacks;
-    }
-
-    private int turnCount = 0;
-
-    private Player[] playerContainers = new Player[2];
-    public Player[] getPlayerContainers() {
-        return playerContainers;
-    }
-
-    public void addPlayers(Player humanPlayer, Player AIPlayer) {
-        // make sure only allocate once
-        if (playerContainers[0] == null && playerContainers[1] == null) {
-            playerContainers[0] = humanPlayer;
-            playerContainers[1] = AIPlayer;
-
-            this.currentPlayer = humanPlayer;
-            turnCount ++;
-            this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
-        }
-    }
-
-    private Player currentPlayer;
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    // switch player
-    public void switchPlayer() {
-        // let all units be ready for this player
-        Map<String,Object> parameters = new HashMap<>();
-        parameters.put("type", "unitBeReady");
-        GameState.getInstance().broadcastEvent(Unit.class, parameters);
-
-        if (this.currentPlayer == playerContainers[0]) {
-            // clear mana of previous player
-            this.currentPlayer.setMana(0);
-            this.currentPlayer = playerContainers[1];
-        } else {
-            // clear mana of previous player
-            this.currentPlayer.setMana(0);
-            this.currentPlayer = playerContainers[0];
-        }
-
-        // update turn and mana
-        turnCount ++;
-        this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
-
-        // draw a card
-        this.currentPlayer.drawCard();
-    }
-
-    // state description
-    public enum CurrentState {
-        READY, CARD_SELECT, UNIT_SELECT
-    }
-
-    private CurrentState currentState = CurrentState.READY;
-    public CurrentState getCurrentState() {
-        return currentState;
-    }
-    public void setCurrentState(CurrentState currentState) {
-        this.currentState = currentState;
-    }
-
-    // selected card
-    private Card cardSelected = null;
-    public Card getCardSelected() {
-        return cardSelected;
-    }
-    public void setCardSelected(Card cardSelected) {
-        this.cardSelected = cardSelected;
-        if (cardSelected == null) {
-            this.currentState = CurrentState.READY;
-        } else {
-            this.currentState = CurrentState.CARD_SELECT;
-        }
-    }
-
-    // selected tile
-    private Tile tileSelected = null;
-    public Tile getTileSelected() {
-        return tileSelected;
-    }
-    public void setTileSelected(Tile tileSelected) {
-        this.tileSelected = tileSelected;
-        if (this.tileSelected == null) {
-            this.currentState = CurrentState.READY;
-        } else {
-            this.currentState = CurrentState.UNIT_SELECT;
-        }
-    }
-
-    private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
     public ActorRef getOut() {
         return out;
     }
-    public void setOut(ActorRef out) {
-        this.out = out;
-    }
 
-    // make GameState as a subject
+    //make GameState as a subject.
     private static GameState instance= new GameState();
+
     public static GameState getInstance(){
         return instance;
     }
 
-    private GameState() {}
+    private GameState(){
+
+    }
 
     public void clear(){
         this.playerContainers = new Player[2];
@@ -444,17 +190,16 @@ public class GameState extends Subject {
         this.currentState = CurrentState.READY;
         this.turnCount = 0;
         this.cardSelected = null;
-        this.tileSelected = null;
         super.clearObservers();
     }
 
     @Override
-    public void broadcastEvent(Class target, Map<String,Object> parameters) {
-        System.out.println();
-        for (Observer observer : observers) {
-            observer.trigger(target, parameters);
+    public void broadcastEvent(Class target, Map<String,Object> parameters){
+        for (Observer observer:observers){
+            observer.trigger(target,parameters);
         }
     }
+
 
     public void registerCallbacks() {
         // Card: Azure Herald, id: 3

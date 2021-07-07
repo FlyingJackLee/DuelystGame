@@ -98,10 +98,7 @@ public class Card {
 			if(rule.toLowerCase(Locale.ROOT).contains("ranged")) {
 				unit.rangedAttack = true;
 			}else unit.rangedAttack = false;
-			
-			if(rule.toLowerCase(Locale.ROOT).contains("airdrop")) {
-				unit.airDrop = true;
-			}else unit.airDrop = false;
+
 			
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
 				unit.attackTwice = true;

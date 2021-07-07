@@ -276,11 +276,6 @@ public class Tile extends Observer {
 
 				}
 			}
-
-            //hand 2 -3: if this card can be summoned anywhere on the board
-			else if (parameters.get("type").equals("airdropSummonRangeHighlight")) {
-				allBroadcast("airdropSummonRangeHighlight-checkAvaliable");
-			}
 			//handle 3: reset tile texture
 			else if (parameters.get("type").equals("textureReset")) {
 				if (!this.tileState.equals(TileState.NORMAL)) {
@@ -290,14 +285,6 @@ public class Tile extends Observer {
 				}
 			}
 
-            else if (parameters.get("type").equals("airdropSummonRangeHighlight-checkAvaliable")) {
-				if(this.unitOnTile == null
-						&& (Integer) parameters.get("tilex") == this.tilex
-						&& (Integer) parameters.get("tiley") == this.tiley) {
-					this.setTileState(TileState.WHITE);
-				}
-				
-			}
 
 			//handle 4: summon a unit
 			else if (parameters.get("type").equals("summon")) {

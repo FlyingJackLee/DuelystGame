@@ -4,7 +4,6 @@ import akka.util.Helpers;
 import commands.BasicCommands;
 import org.ietf.jgss.GSSManager;
 import structures.GameState;
-import structures.Observer;
 import utils.ToolBox;
 
 import java.util.*;
@@ -18,8 +17,9 @@ import java.util.*;
  */
 public class Player {
 
+
 	private List<Card> deck = new ArrayList<>();
-	private Card[] cardsOnHand = new Card[6];
+	private Card[] cardsOnHand  = new Card[6];
 
 	public void setDeck(Card ...cards) {
 		for (Card card : cards) {
@@ -27,32 +27,72 @@ public class Player {
 		}
 	}
 
-	/*
+
+	/**
 	 *
-	 * draw card from deck
+	 * check if this player is a human or AI
+	 *
+	 * @return boolean: true - human; false - AI
+	 */
+	public boolean isHumanOrAI(){
+
+		if (this == GameState.getInstance().getPlayerContainers()[0]){
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+
+	/**
+	 *
+	 * drawCard From deck
 	 *
 	 */
-	public void drawCard() {
+	public void drawCard(){
+		//WIN/LOSE condition one
+		if (deck.size() == 0) {
+			if (this == GameState.getInstance().getPlayerContainers()[0]){
+				ToolBox.logNotification("AIPlayer has won!");
+
+			}
+			else {
+				ToolBox.logNotification("Human has won!");
+			}
+
+			return;
+		}
+
+
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
 
 		int i;
 
-		// find a blank space
+		//find a blank space
 		for (i = 0; i < 6; i++) {
-			if(this.cardsOnHand[i] == null) {
+			if(this.cardsOnHand[i] == null){
 				this.cardsOnHand[i] = card;
-				BasicCommands.drawCard(GameState.getInstance().getOut(), card, i+1, 0);
-				// wait for frontend
-				try {Thread.sleep(ToolBox.delay);} catch (InterruptedException e) {e.printStackTrace();}
+				BasicCommands.drawCard(GameState.getInstance().getOut(),
+						card,i +1,0);
+				try {
+					Thread.sleep(ToolBox.delay);
+				}
+				//wait for the frontend
+				catch (InterruptedException e){e.printStackTrace();}
 				break;
 			}
 		}
 
-		if (i == 6) {
-			ToolBox.logNotification("You cannot have more than 6 cards, discard this card.");
+
+		if (i == 6){
+			//TODO : need to be test.
+			ToolBox.logNotification("You can have more card(exceed 6), discard this card.");
 		}
+
+
 	}
 
 	int health;
@@ -63,6 +103,7 @@ public class Player {
 		this.health = 20;
 		this.mana = 0;
 	}
+
 
 	public Player(int health, int mana) {
 		super();
@@ -85,120 +126,171 @@ public class Player {
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
 	}
 
-	// remove card from hand
-	public void removeCardFromHand(Card card) {
-		// update mana
+
+	//clear card from hand
+	public void removeCardFromHand(Card card){
+
+		//update the mana
 		this.setMana(mana-card.getManacost());
 
-		// clear highlight
+
+		//clear highlight
 		clearSelected();
 
-		int index = ToolBox.findObjectInArray(this.cardsOnHand, card);
 
-		// remove from hand (backend and frontend)
-		BasicCommands.deleteCard(GameState.getInstance().getOut(), index+1);
-		try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
+		int index = ToolBox.findObjectInArray(this.cardsOnHand,card);
+
+
+		//remove from hand(backend and frontend)
+		BasicCommands.deleteCard(GameState.getInstance().getOut(),index+1);
+		try {
+			Thread.sleep(500);
+		}catch (InterruptedException e){e.printStackTrace();}
 		this.cardsOnHand[index] = null;
 
-		// remove form GameState
+		//remove form gameState
 		GameState.getInstance().setCardSelected(null);
 
-		// clear range
+
+		//clear the range
 		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type", "textureReset");
-		GameState.getInstance().broadcastEvent(Tile.class, parameters);
+		parameters.put("type","textureReset");
+		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+
+
 	}
+
 
 	/**
 	 *
 	 * set the card selected
 	 *
-	 * @param handPosition: 0 ~ 6 (at specific position)
+	 * @param handPosition:  0 ~ 6( at specific position)
 	 */
-	public void cardSelected(int handPosition) {
-		if (handPosition < 0 || handPosition > 5) {
+	public void cardSelected(int handPosition){
+
+
+		if (handPosition <0 || handPosition > 5 ){
 			return;
 		}
 
 		Card cardSelected = this.cardsOnHand[handPosition];
 
-		// if the player has enough mana
-		if(cardSelected.getManacost() <= this.mana) {
-			// highlight card
-			// if player has selected a card, reset the card highlight firstly
-			if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
+
+		//if the player has enough mana
+		if(cardSelected.getManacost() <= this.mana){
+
+			//highlight card
+			//if the player have selected a card, reset the card highlight firstly
+			if ( GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT) ){
 				clearSelected();
 			}
 
-			// set backend
+			//set backend
 			GameState.getInstance().setCardSelected(cardSelected);
 
-			// render frontend
-			BasicCommands.drawCard(GameState.getInstance().getOut(), cardSelected, handPosition+1, 1);
+			//render frontend
+			BasicCommands.drawCard(GameState.getInstance().getOut(),cardSelected,
+					handPosition + 1
+					,1);
 
-			// highlight valid tiles
+			//highlight valid tiles
 			showValidRange(cardSelected);
-		} else {
+
+
+
+		}
+		else {
 			ToolBox.logNotification("Mana not enough");
 			return;
 		}
+
+
 	}
 
-	public void clearSelected() {
-		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
-			BasicCommands.drawCard(GameState.getInstance().getOut(), GameState.getInstance().getCardSelected(),
-					ToolBox.findObjectInArray(cardsOnHand, GameState.getInstance().getCardSelected())+1, 0);
+	public void clearSelected(){
+		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 
-			// clear backend
+			BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
+					ToolBox.findObjectInArray(cardsOnHand,GameState.getInstance().getCardSelected()) + 1
+					,0);
+
+			//clear backend
 			GameState.getInstance().setCardSelected(null);
-			GameState.getInstance().setTileSelected(null);
+
+
 		}
 	}
 
-	public void showValidRange(Card cardSelected) {
-		Map<String,Object> parameters = new HashMap<>();
-		parameters.put("type", "textureReset");
-		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
-		// wait for completion of reset
+	public void showValidRange(Card cardSelected){
+		Map<String,Object> parameters = new HashMap<>();
+
+		parameters.put("type","textureReset");
+		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+		//waiting for completion of reset
 		try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
 
-		// calculate the target range of card
-		// if it is a spell
+
+		//Calculate the target range of card
+		//if it is a spell
 		if (cardSelected.isCreatureOrSpell() == -1) {
 			String rule = cardSelected.getBigCard().getRulesTextRows()[0];
 			parameters = new HashMap<>();
 			parameters.put("type", "searchUnit");
-			// if the target is a unit
+			//if the target is a unit
 			if (rule.toLowerCase(Locale.ROOT).contains("unit")) {
-				// find all enemy units
+
+				//find all enemy Unit
 				if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
 					parameters.put("range", "enemy");
+
+					//ask the tileS to give the list of enemy units and highlight them.
 					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
-
-				// find all non-avatar units
+				//find all non-avatar Unit
 				else if (rule.toLowerCase(Locale.ROOT).contains("non-avatar")) {
 					parameters.put("range", "non_avatar");
+					//ask the tileS to give the list of all units and highlight them.
 					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
-
-				// find all units
+				//find all Unit
 				else {
 					parameters.put("range", "all");
+					//ask the tileS to give the list of all units and highlight them.
 					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
 			}
 
-			// if the target is a avatar
+			//if the target is a avatar
 			else if (rule.toLowerCase(Locale.ROOT).contains("avatar")) {
-				// find current avatar
+				//find current avatar
 				if (rule.toLowerCase(Locale.ROOT).contains("your avatar")) {
 					{
 						parameters.put("range", "your_avatar");
+						//ask the tile to give the list of enemy units
 						GameState.getInstance().broadcastEvent(Tile.class, parameters);
 					}
+
+
 				}
+			}
+		}
+		//if it is a creature
+		else {
+			parameters = new HashMap<>();
+			parameters.put("type","validSummonRangeHighlight");
+
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+			//Callback Point: <CardSelectedCallBacks>
+			//call all call backs when card used
+			int id = cardSelected.id;
+			if (GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)) != null){
+				//call the callback
+				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
 			}
 		}
 
@@ -216,5 +308,6 @@ public class Player {
 				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
 			}
 		}
+
 	}
 }

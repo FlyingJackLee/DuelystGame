@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
+import utils.ToolBox;
 
 import java.util.HashMap;
 import java.util.Locale;
+
 import java.util.Map;
 
 /**
@@ -24,13 +26,14 @@ import java.util.Map;
  */
 public class Unit extends Observer {
 
-	enum UnitState{
+
+	public enum UnitState{
 		//the unit is ready after the next turn of summon
 		//TODO: switch in turn change
 		NOT_READY,READY,HAS_MOVED,HAS_ATTACKED
 
 	}
-	
+
 	private UnitState currentState= UnitState.NOT_READY;
 
 	public void setCurrentState(UnitState currentState) {
@@ -39,7 +42,7 @@ public class Unit extends Observer {
 
 	public UnitState getCurrentState() { return currentState;}
 
-	
+
 	private Player owner = GameState.getInstance().getCurrentPlayer();
 
 	public Player getOwner() {
@@ -49,8 +52,10 @@ public class Unit extends Observer {
 	public void setOwner(Player owner) {
 		this.owner = owner;
 	}
-	
+
+
 	private int maxHealth;
+
 	public void setMaxHealth(int maxHealth) {
 		this.maxHealth = maxHealth;
 	}
@@ -67,6 +72,11 @@ public class Unit extends Observer {
 		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), 
 				this, attack);}
 	
+
+	public int getAttack() {return attack;}
+
+
+	private int health;
 
 	public int getAttack() {return attack;}
 
@@ -96,6 +106,8 @@ public class Unit extends Observer {
 	}
 	
 	
+
+	public int getHealth() { return health;	}
 
 	public int getHealth() { return health;	}
 
@@ -202,11 +214,13 @@ public class Unit extends Observer {
 				}
 			}
 
+
 			//TODO
 			else if(parameters.get("type").equals("unitBeReady")){
 				if (this.owner == GameState.getInstance().getCurrentPlayer()){
 					this.currentState =  UnitState.READY;
 				}
+                else {this.currentState = UnitState.NOT_READY;}
 			}
 
 //			else if(parameters.get("type").equals("findUnitList")){
@@ -224,6 +238,7 @@ public class Unit extends Observer {
 					//Attack First time, allow counter attack.
 					attackedUnit.attacked(attackerUnit,true);
 				}
+
 			}
 		}
 	}

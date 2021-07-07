@@ -70,30 +70,26 @@ public class TileClicked implements EventProcessor{
 			}
 			//if it is a spell
 			else {
-				// play a spell on certain unit
-				
-				parameters.put("type", "spell");
-				parameters.put("tilex",tilex);
-				parameters.put("tiley",tiley);
-				GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
 			}
-		}
+			}
 
 		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
-				parameters = new HashMap<>();
-				parameters.put("type","firstClickTile");
-				parameters.put("tilex",tilex);
-				parameters.put("tiley",tiley);
-				GameState.getInstance().broadcastEvent(Tile.class,parameters);
-			}
+			parameters = new HashMap<>();
+			parameters.put("type","firstClickTile");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		}
 
 		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
-				parameters = new HashMap<>();
-				parameters.put("type", "operateUnit");
-				parameters.put("tilex",tilex);
-				parameters.put("tiley",tiley);
-				parameters.put("originTileSelected", GameState.getInstance().getTileSelected());
-				GameState.getInstance().broadcastEvent(Tile.class,parameters);
+			parameters = new HashMap<>();
+			parameters.put("type", "operateUnit");
+			parameters.put("tilex",tilex);
+			parameters.put("tiley",tiley);
+			parameters.put("originTileSelected", GameState.getInstance().getTileSelected());
+			GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
 		}
 
 	}

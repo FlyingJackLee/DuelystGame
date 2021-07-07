@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
 import commands.BasicCommands;
+import demo.CheckMoveLogic;
 import demo.CommandDemo;
 import org.checkerframework.checker.units.qual.A;
 import structures.GameState;
@@ -34,7 +35,7 @@ public class Initalize implements EventProcessor{
 
 		//clear the instance
 		GameState.getInstance().clearObservers();
-		//CommandDemo.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
+		//CheckMoveLogic.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
 		//1. generate the tiles
 		for (int i = 0; i < 9; i++) {
@@ -47,7 +48,9 @@ public class Initalize implements EventProcessor{
 		}
 
 		//2.generate Players
+		//2.generate Players
 		Player humanPlayer = new Player(20, 0);
+
 		Player AIPlayer = new AIPlayer(20, 0);
 
 		BasicCommands.setPlayer1Health(out, humanPlayer);
@@ -153,18 +156,21 @@ public class Initalize implements EventProcessor{
 		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
 
 
-		//6.human player draw 3 cards
-		GameState.getInstance().getCurrentPlayer().drawCard();
-		GameState.getInstance().getCurrentPlayer().drawCard();
-		GameState.getInstance().getCurrentPlayer().drawCard();
 
-		//7.set all unit READY
+		//6.human player draw 3 cards
+		humanPlayer.drawCard();
+		humanPlayer.drawCard();
+		humanPlayer.drawCard();
+
+		//7. AI player draw 3 cards
+		AIPlayer.drawCard();
+		AIPlayer.drawCard();
+		AIPlayer.drawCard();
+
+		//8.set all unit READY
 		parameters =  new HashMap<>();
 		parameters.put("type","unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-
-
 	}
 
 }

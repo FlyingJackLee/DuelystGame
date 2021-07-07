@@ -143,5 +143,8 @@ public class Initalize implements EventProcessor {
 		parameters = new HashMap<>();
 		parameters.put("type", "unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+		// 8.register all callbacks
+		GameState.getInstance().registerCallbacks();
 	}
 }

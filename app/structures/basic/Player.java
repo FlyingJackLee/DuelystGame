@@ -207,6 +207,14 @@ public class Player {
 			parameters = new HashMap<>();
 			parameters.put("type", "validSummonRangeHighlight");
 			GameState.getInstance().broadcastEvent(Tile.class, parameters);
+
+			// Callback Point: <CardSelectedCallBacks>
+			// run callbacks when a card is used
+			int id = cardSelected.id;
+			if (GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)) != null) {
+				// call the callback
+				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
+			}
 		}
 	}
 }

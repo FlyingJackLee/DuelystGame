@@ -24,6 +24,11 @@ import java.util.Map;
  */
 public class Unit extends Observer {
 
+	private int maxHealth;
+	public void setMaxHealth(int maxHealth) {
+		this.maxHealth = maxHealth;
+	}
+
 	enum UnitState {
 		// the unit is ready after the next turn of summon
 		// TODO: switch in turn change
@@ -195,6 +200,14 @@ public class Unit extends Observer {
 							ToolBox.logNotification("You lose!");
 							GameState.getInstance().clear();
 						}
+
+						// Callback Point: <UnitDeathCallBacks>
+						// run callbacks when a unit is dead
+						int id = this.id;
+						if (GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)) != null) {
+							// call the callback
+							GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)).apply(id);
+						}
 					}
 
 					// if enemy alive
@@ -220,12 +233,28 @@ public class Unit extends Observer {
 			}
 
 			// Unit Ability: Heal
+			else if(parameters.get("type").equals("modifyUnit")) {
+				if (this.id == (Integer) parameters.get("unitId")) {
+					int newHealth = this.health + (Integer) parameters.get("health");
+					int newAttack = this.attack + (Integer) parameters.get("attack");
+
+					if (parameters.get("limit") != null
+							&& parameters.get("limit").equals("max")
+							&& newHealth > maxHealth) {
+						ToolBox.logNotification("Cannot exceed the max health");
+						newHealth = maxHealth;
+					}
+
+					this.setAttack(newHealth);
+					this.setAttack(newAttack);
+				}
+			}
 
 			// TODO: Unit Ability: Provoke
 
 			// TODO: Unit Ability: Attack Twice
 
-			// TODO: Unit Ability: Airdrop
+			// Unit Ability: Airdrop
 
 			// TODO: Unit Ability: Flying
 

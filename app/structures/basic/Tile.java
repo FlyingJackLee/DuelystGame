@@ -191,6 +191,17 @@ public class Tile extends Observer {
 
 			// handle 2-1: find valid summon tile
 			else if (parameters.get("type").equals("validSummonRangeHighlight")) {
+
+				// EX: highlight all tiles
+				if (parameters.get("airdrop") != null
+						&& parameters.get("airdrop").equals("activate")) {
+					if (this.unitOnTile == null) {
+						// change backend texture state
+						this.setTileState(TileState.WHITE);
+						return;
+					}
+				}
+
 				// find a friendly unit
 				if (this.unitOnTile != null && this.unitOnTile.getOwner() == GameState.getInstance().getCurrentPlayer()) {
 					int[] xpos = new int[] {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -409,6 +420,17 @@ public class Tile extends Observer {
 	}
 
 	public void attack(Unit attacker, Unit beattacked) {
+
+		// Callback Point: <AvatarAttackCallBacks>
+		// if it is a avatar
+		if (attacker.id == 99 || attacker.id == 100) {
+			int id = beattacked.id;
+			if (GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)) != null) {
+				// call the callback
+				GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)).apply(id);
+			}
+		}
+
 		// set unit state - HAS_ATTACKED
 		attacker.setCurrentState(Unit.UnitState.HAS_ATTACKED);
 

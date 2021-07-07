@@ -85,6 +85,8 @@ public class Card {
 		unit.setHealth(this.bigCard.getHealth());
 		unit.setAttack(this.bigCard.getAttack());
 
+		unit.setMaxHealth(this.bigCard.getHealth());
+
 		return unit;
 	}
 
@@ -97,5 +99,36 @@ public class Card {
 		else {
 			return 1;
 		}
+	}
+
+	// when a creature card is used, call this method
+	public void creatureCardUsed(int tilex, int tiley) {
+
+		// Callback Point: <BeforeSummonCallbacks>
+		// run callbacks before summon
+		int id = this.id;
+		if (GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)) != null) {
+			// call the callback
+			GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)).apply(id);
+		}
+
+		Map<String, Object> parameters = new HashMap<>();
+
+		Unit unit = this.cardToUnit();
+
+		// summon unit
+		parameters.put("type", "summon");
+		parameters.put("tilex", tilex);
+		parameters.put("tiley", tiley);
+		parameters.put("unit", unit);
+		GameState.getInstance().broadcastEvent(Tile.class, parameters);
+
+		// set attack and health
+		parameters = new HashMap<>();
+		parameters.put("type", "setUnit");
+		parameters.put("unitId", this.getId());
+		GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+		GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
 	}
 }

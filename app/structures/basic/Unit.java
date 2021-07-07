@@ -216,22 +216,12 @@ public class Unit extends Observer {
 			}
 
 
-			//TODO
 			else if(parameters.get("type").equals("unitBeReady")){
 				if (this.owner == GameState.getInstance().getCurrentPlayer()){
 					this.currentState =  UnitState.READY;
 				}
                 else {this.currentState = UnitState.NOT_READY;}
 			}
-
-//			else if(parameters.get("type").equals("findUnitList")){
-//				if (this.owner.equals(GameState.getInstance().getCurrentPlayer())){
-//					this.owner
-//
-//				}
-//
-//			}
-			
 			else if(parameters.get("type").equals("attacked")){
 				if(parameters.get("attackedUnit").equals(this)){
 					Unit attackedUnit = this;
@@ -240,7 +230,6 @@ public class Unit extends Observer {
 					attackedUnit.attacked(attackerUnit,true);
 
 				}
-
 			}
 
             else if(parameters.get("type").equals("modifyUnit")){
@@ -264,20 +253,20 @@ public class Unit extends Observer {
 
 	}
 	}
-	
+
 	public void attacked (Unit attacker, boolean allowCounterAttack) {
 		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
 		try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
 		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
 
 		this.setHealth(this.getHealth()- attacker.getAttack());
-			
+
 		// if this unit survives, is allow to counter attack, and the attacker is in the attack range
 		if(allowCounterAttack && this.health >=1
-					&& this.targetIsInAttackRange(attacker.getPosition().getTilex(), attacker.getPosition().getTiley())) {
-				attacker.attacked(this, false); //counter attack not allow attack.
-			}		
+				&& this.targetIsInAttackRange(attacker.getPosition().getTilex(), attacker.getPosition().getTiley())) {
+			attacker.attacked(this, false); //counter attack not allow attack.
 		}
+	}
 
 	public boolean targetIsInAttackRange(int tilex,int tiley) {
 		int[] offsetx = new int[]{1,1,0,-1,-1,-1, 0, 1};

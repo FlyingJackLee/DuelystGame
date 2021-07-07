@@ -77,11 +77,16 @@ public class GameState extends Subject {
     //switch player
     public void switchPlayer() {
 
-        //let all unit be ready for this player
+        // reset texture
         Map<String,Object> parameters =  new HashMap<>();
-        parameters.put("type","unitBeReady");
+        parameters.put("type","textureReset");
         GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
+        //draw a card
+        this.currentPlayer.drawCard();
+
+        // set game state READY
+        this.currentState = CurrentState.READY;
 
         if (this.currentPlayer == playerContainers[0]){
             //clear mana of previous player
@@ -100,8 +105,14 @@ public class GameState extends Subject {
         turnCount ++;
         this.currentPlayer.setMana((int) Math.ceil(turnCount/2.0));
 
-        //draw a card
-        this.currentPlayer.drawCard();
+        //let all unit be ready for this player
+        parameters =  new HashMap<>();
+        parameters.put("type","unitBeReady");
+        GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
+        if(this.currentPlayer.equals(playerContainers[1])){
+            ((AIPlayer)playerContainers[1]).startUpAIMode();
+        }
 
     }
 

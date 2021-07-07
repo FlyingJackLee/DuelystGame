@@ -3,6 +3,7 @@ package structures.basic;
 import commands.BasicCommands;
 import structures.GameState;
 import utils.ToolBox;
+import structures.basic.Card;
 
 import java.util.*;
 

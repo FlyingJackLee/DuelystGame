@@ -1,6 +1,5 @@
 package events;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
@@ -24,7 +23,7 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
-public class CardClicked implements EventProcessor{
+public class CardClicked implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
@@ -36,5 +35,4 @@ public class CardClicked implements EventProcessor{
 
 
 	}
-
 }

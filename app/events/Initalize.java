@@ -7,6 +7,7 @@ import commands.BasicCommands;
 import demo.CheckMoveLogic;
 import demo.CommandDemo;
 import org.checkerframework.checker.units.qual.A;
+
 import structures.GameState;
 import structures.basic.*;
 import utils.BasicObjectBuilders;
@@ -28,35 +29,38 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
-public class Initalize implements EventProcessor{
+public class Initalize implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
+		// clear instance
+		GameState.getInstance().clearObservers();
 
 		//clear the instance
 		GameState.getInstance().clearObservers();
 		//CheckMoveLogic.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
-		//1. generate the tiles
+		// 1.generate tiles
 		for (int i = 0; i < 9; i++) {
 			for (int j = 0; j < 5; j++) {
-				Tile tile = BasicObjectBuilders.loadTile(i,j);
-				//register on gameState
+				Tile tile = BasicObjectBuilders.loadTile(i, j);
+				// register on gameState
 				GameState.getInstance().add(tile);
-				BasicCommands.drawTile(out,tile,0);
+				BasicCommands.drawTile(out, tile, 0);
 			}
 		}
 
-		//2.generate Players
-		//2.generate Players
+
+		// 2.generate players
 		Player humanPlayer = new Player(20, 0);
 
 		Player AIPlayer = new AIPlayer(20, 0);
 
+
 		BasicCommands.setPlayer1Health(out, humanPlayer);
 		BasicCommands.setPlayer2Health(out, AIPlayer);
 
-		//3.set the deck
+		// 3.set decks
 		String[] deck1Cards = {
 				StaticConfFiles.c_comodo_charger,
 				StaticConfFiles.c_hailstone_golem,
@@ -85,16 +89,19 @@ public class Initalize implements EventProcessor{
 
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck1Cards[i],i,Card.class );
+
 			humanPlayer.setDeck(card);
 		}
 
 		for (int i = 0; i < 10; i++) {
 			Card card = BasicObjectBuilders.loadCard(deck2Cards[i],i+10,Card.class );
+
 			AIPlayer.setDeck(card);
 		}
 
 
-		BasicCommands.addPlayer1Notification(out, "Your turn", 2);
+		ToolBox.logNotification("Your turn");
+
 
 		Map<String,Object> parameters = new HashMap<>();
 
@@ -109,6 +116,7 @@ public class Initalize implements EventProcessor{
 		humanAvatar.setMaxHealth(20);
 
 		GameState.getInstance().add(humanAvatar);
+		humanAvatar.setOwner(humanPlayer);
 		parameters = new HashMap<>();
 		parameters.put("type","summon");
 		parameters.put("tilex",1);
@@ -125,54 +133,54 @@ public class Initalize implements EventProcessor{
 		AiAvatar.setOwner(AIPlayer);
 		AiAvatar.setMaxHealth(20);
 		parameters = new HashMap<>();
-		parameters.put("type","summon");
-		parameters.put("tilex",7);
-		parameters.put("tiley",2);
-		parameters.put("unit",AiAvatar);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
+		parameters.put("type", "summon");
+		parameters.put("tilex", 7);
+		parameters.put("tiley", 2);
+		parameters.put("unit", AIAvatar);
+		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
 		//4.1 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
-
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
-
 		parameters.put("unitId",ToolBox.humanAvatarId);
-
-
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
-		//4.2 set attack/health of AiAvatar
-		AiAvatar.setAttack(2);
-		AiAvatar.setHealth(20);
+
+		// 4.2 set attack/health of AIAvatar
+		AIAvatar.setAttack(2);
+		AIAvatar.setHealth(20);
 		parameters = new HashMap<>();
 		parameters.put("type","setUnit");
 		parameters.put("unitId",ToolBox.AIAvatarID);
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
-		//5.set player
-		GameState.getInstance().addPlayers(humanPlayer,AIPlayer);
 
+		// 5.set players
+		GameState.getInstance().addPlayers(humanPlayer, AIPlayer);
 
 
 		//6.human player draw 3 cards
-		humanPlayer.drawCard();
-		humanPlayer.drawCard();
-		humanPlayer.drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
+		GameState.getInstance().getCurrentPlayer().drawCard();
 
-		//7. AI player draw 3 cards
+
+        //7. AI player draw 3 cards
 		AIPlayer.drawCard();
 		AIPlayer.drawCard();
 		AIPlayer.drawCard();
+
 
 		//8.set all unit READY
 		parameters =  new HashMap<>();
 		parameters.put("type","unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
+		//9.register all callback
+		GameState.getInstance().registerCallbacks();
+
 	}
-
 }
-
-

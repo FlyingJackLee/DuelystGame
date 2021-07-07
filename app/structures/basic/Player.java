@@ -6,7 +6,6 @@ import events.EventProcessor;
 import events.TileClicked;
 import org.ietf.jgss.GSSManager;
 import structures.GameState;
-import structures.Observer;
 import utils.ToolBox;
 
 import java.util.*;
@@ -23,9 +22,26 @@ public class Player {
 	private List<Card> deck = new ArrayList<>();
 	protected Card[] cardsOnHand  = new Card[6];
 
-	public void setDeck(Card ...cards){
-		for (Card card:cards) {
+	public void setDeck(Card ...cards) {
+		for (Card card : cards) {
 			this.deck.add(card);
+		}
+	}
+
+
+	/**
+	 *
+	 * check if this player is a human or AI
+	 *
+	 * @return boolean: true - human; false - AI
+	 */
+	public boolean isHumanOrAI(){
+
+		if (this == GameState.getInstance().getPlayerContainers()[0]){
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 
@@ -36,6 +52,20 @@ public class Player {
 	 *
 	 */
 	public void drawCard(){
+		//WIN/LOSE condition one
+		if (deck.size() == 0) {
+			if (this == GameState.getInstance().getPlayerContainers()[0]){
+				ToolBox.logNotification("AIPlayer has won!");
+
+			}
+			else {
+				ToolBox.logNotification("Human has won!");
+			}
+
+			return;
+		}
+
+
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
@@ -70,29 +100,33 @@ public class Player {
 
 	int health;
 	int mana;
-	
+
 	public Player() {
 		super();
 		this.health = 20;
 		this.mana = 0;
 	}
+
+
 	public Player(int health, int mana) {
 		super();
 		this.health = health;
 		this.mana = mana;
 	}
+
 	public int getHealth() {
 		return health;
 	}
 	public void setHealth(int health) {
 		this.health = health;
+		BasicCommands.setPlayer1Health(GameState.getInstance().getOut(), this);
 	}
 	public int getMana() {
 		return mana;
 	}
 	public void setMana(int mana) {
 		this.mana = mana;
-		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(),this);
+		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
 	}
 
 
@@ -262,17 +296,29 @@ public class Player {
 
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
+			//Callback Point: <CardSelectedCallBacks>
+			//call all call backs when card used
+			int id = cardSelected.id;
+			if (GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)) != null){
+				//call the callback
+				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
+			}
 		}
 
-	}
+		// if it is a creature
+		else {
+			parameters = new HashMap<>();
+			parameters.put("type", "validSummonRangeHighlight");
+			GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
-	/**
-	 *
-	 * check if this player is a human or AI
-	 *
-	 * @return boolean: true - human; false - AI
-	 */
-	public boolean isHumanOrAI(){
+			// Callback Point: <CardSelectedCallBacks>
+			// run callbacks when a card is used
+			int id = cardSelected.id;
+			if (GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)) != null) {
+				// call the callback
+				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
+			}
+		}
 
 		if (this == GameState.getInstance().getPlayerContainers()[0]){
 			return true;

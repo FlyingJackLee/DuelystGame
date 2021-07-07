@@ -27,6 +27,15 @@ import java.util.Map;
 public class Unit extends Observer {
 
 
+
+
+
+	private int maxHealth;
+
+	public void setMaxHealth(int maxHealth) {
+		this.maxHealth = maxHealth;
+	}
+
 	public enum UnitState{
 		//the unit is ready after the next turn of summon
 		//TODO: switch in turn change
@@ -34,16 +43,20 @@ public class Unit extends Observer {
 
 	}
 
+
 	private UnitState currentState= UnitState.NOT_READY;
 
 	public void setCurrentState(UnitState currentState) {
 		this.currentState = currentState;
 	}
 
-	public UnitState getCurrentState() { return currentState;}
 
 
 	private Player owner = GameState.getInstance().getCurrentPlayer();
+
+	public UnitState getCurrentState() { return currentState;}
+
+
 
 	public Player getOwner() {
 		return owner;
@@ -59,7 +72,6 @@ public class Unit extends Observer {
 	public void setMaxHealth(int maxHealth) {
 		this.maxHealth = maxHealth;
 	}
-
 
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
@@ -126,28 +138,27 @@ public class Unit extends Observer {
 	boolean attackTwice = false; // can attack twice one turn
 	
 	
+
 	public Unit(int id, UnitAnimationSet animations, ImageCorrection correction) {
 		super();
 		this.id = id;
 		this.animation = UnitAnimationType.idle;
-		
 		position = new Position(0,0,0,0);
-		this.correction = correction;
 		this.animations = animations;
+		this.correction = correction;
 	}
-	
+
 	public Unit(int id, UnitAnimationSet animations, ImageCorrection correction, Tile currentTile) {
 		super();
 		this.id = id;
 		this.animation = UnitAnimationType.idle;
-		
-		position = new Position(currentTile.getXpos(),currentTile.getYpos(),currentTile.getTilex(),currentTile.getTiley());
-		this.correction = correction;
+		position = new Position(currentTile.getXpos(), currentTile.getYpos(), currentTile.getTilex(), currentTile.getTiley());
 		this.animations = animations;
+		this.correction = correction;
 	}
-	
-	public Unit(int id, UnitAnimationType animation, Position position, UnitAnimationSet animations,
-			ImageCorrection correction) {
+
+
+	public Unit(int id, UnitAnimationType animation, Position position, UnitAnimationSet animations, ImageCorrection correction) {
 		super();
 		this.id = id;
 		this.animation = animation;
@@ -168,31 +179,33 @@ public class Unit extends Observer {
 	public void setAnimation(UnitAnimationType animation) {
 		this.animation = animation;
 	}
-
-	public ImageCorrection getCorrection() {
-		return correction;
-	}
-
-	public void setCorrection(ImageCorrection correction) {
-		this.correction = correction;
-	}
-
 	public Position getPosition() {
 		return position;
 	}
-
 	public void setPosition(Position position) {
 		this.position = position;
 	}
-
 	public UnitAnimationSet getAnimations() {
 		return animations;
 	}
-
 	public void setAnimations(UnitAnimationSet animations) {
 		this.animations = animations;
 	}
-	
+
+	public void addAttack(int attackChange){
+		this.setAttack(this.attack + attackChange);
+		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this,this.attack);
+
+	}
+
+	public void addHealth(int healthChange){
+		this.setHealth(this.health + healthChange);
+		BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this,this.health);
+
+	}
+
+
+
 	/**
 	 * This command sets the position of the Unit to a specified
 	 * tile.
@@ -200,9 +213,8 @@ public class Unit extends Observer {
 	 */
 	@JsonIgnore
 	public void setPositionByTile(Tile tile) {
-		position = new Position(tile.getXpos(),tile.getYpos(),tile.getTilex(),tile.getTiley());
+		position = new Position(tile.getXpos(), tile.getYpos(), tile.getTilex(), tile.getTiley());
 	}
-
 
 	@Override
 	public void trigger(Class target, Map<String,Object> parameters) {
@@ -237,10 +249,31 @@ public class Unit extends Observer {
 					Unit attackerUnit = (Unit) parameters.get("attackerUnit");
 					//Attack First time, allow counter attack.
 					attackedUnit.attacked(attackerUnit,true);
+
 				}
 
 			}
-		}
+
+            else if(parameters.get("type").equals("modifyUnit")){
+                if (this.id == (Integer) parameters.get("unitId")){
+                    int newHealth = this.health + (Integer) parameters.get("health");
+                    int newAttack = this.attack + (Integer) parameters.get("attack");
+            
+                    if (parameters.get("limit") != null
+                            && parameters.get("limit").equals("max")
+                            && newHealth > maxHealth){
+                        ToolBox.logNotification("Cannot exceed the max health");
+                        newHealth = maxHealth;
+                    }
+            
+                    this.setAttack(newHealth);
+                    this.setAttack(newAttack);
+            
+                }
+            
+            }
+
+	}
 	}
 	
 	public void attacked (Unit attacker, boolean allowCounterAttack) {

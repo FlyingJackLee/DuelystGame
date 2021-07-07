@@ -2,6 +2,16 @@ package utils;
 
 import commands.BasicCommands;
 import structures.GameState;
+import structures.basic.Card;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,6 +46,28 @@ public class ToolBox {
             }
         }
         return -1;
+    }
+
+    public static String getRules(Card card){
+        String[] rule_lines = card.getBigCard().getRulesTextRows();
+        String rules = "";
+        for (String rule:rule_lines){
+            rules += rule.toLowerCase(Locale.ROOT);
+
+        }
+        return rules;
+    }
+
+    public static int findNumberInStr(String str){
+        Pattern r = Pattern.compile("\\d{1}");
+        Matcher matcher = r.matcher(str);
+
+        int value = 0;
+
+        if (matcher.find()){
+            value = Integer.parseInt(matcher.group(0));
+        }
+        return value;
     }
 
 }

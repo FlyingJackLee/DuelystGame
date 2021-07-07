@@ -27,11 +27,10 @@ import java.util.Map;
  * @author Dr. Richard McCreadie
  *
  */
-public class TileClicked implements EventProcessor{
+public class TileClicked implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
 
@@ -45,27 +44,11 @@ public class TileClicked implements EventProcessor{
 			//get card selected
 			Card cardSelected = GameState.getInstance().getCardSelected();
 
+
 			//if it is a creature
 			if (cardSelected.isCreatureOrSpell() == 1){
 
-				//create unit
-				Unit new_unit = cardSelected.cardToUnit();
-
-				//summon unit
-				parameters.put("type","summon");
-				parameters.put("tilex",tilex);
-				parameters.put("tiley",tiley);
-				parameters.put("card",cardSelected);
-				parameters.put("unit",new_unit);
-				GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-				//set attack and health
-				parameters = new HashMap<>();
-				parameters.put("type","setUnit");
-				parameters.put("unitId",cardSelected.getId());
-
-				GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
+				cardSelected.creatureCardUsed(tilex,tiley);
 
 			}
 			//if it is a spell

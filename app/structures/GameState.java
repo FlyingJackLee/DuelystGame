@@ -113,6 +113,10 @@ public class GameState extends Subject {
         parameters.put("type","unitBeReady");
         GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
+        parameters =  new HashMap<>();
+        parameters.put("type","textureReset");
+        GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
         if(this.currentPlayer.equals(playerContainers[1])){
             ((AIPlayer)playerContainers[1]).startUpAIMode();
         }

@@ -218,6 +218,15 @@ public class Tile extends Observer {
 							//if it is the avatar of current player
 							&& this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())) {
 						this.setTileState(TileState.WHITE);
+					} else if (parameters.get("range").equals("all_friends")
+							&& !this.unitOnTile.getOwner().isHumanOrAI()) {
+						AIPlayer aiPlayer = (AIPlayer) GameState.getInstance().getCurrentPlayer();
+						aiPlayer.addToOptionalTile(this);
+						try {
+							Thread.sleep(500);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 
@@ -338,9 +347,10 @@ public class Tile extends Observer {
 									allBroadcast("attackHighlight");
 									this.moveHighlight();
 								} else {
-									this.attackHighlight();
 									this.moveHighlight();
+									this.attackHighlight();
 								}
+								GameState.getInstance().setCurrentState(GameState.CurrentState.UNIT_SELECT);
 							}
 							// if the unit has moved, it can't move but can attack, only highlight attack unit
 							else if (this.unitOnTile.getCurrentState().equals(Unit.UnitState.HAS_MOVED)) {
@@ -352,7 +362,8 @@ public class Tile extends Observer {
 						}
 					}
 				}
-			} else if (parameters.get("type").equals("moveHighlight")) {
+			}
+			else if (parameters.get("type").equals("moveHighlight")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
 
@@ -364,7 +375,8 @@ public class Tile extends Observer {
 						this.attackHighlight();
 					}
 				}
-			} else if (parameters.get("type").equals("attackHighlight")) {
+			}
+			else if (parameters.get("type").equals("attackHighlight")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
 					// if the unit is enemy unit, highlight the tile to red
@@ -398,13 +410,15 @@ public class Tile extends Observer {
 						}
 					}
 				}
-			} else if (parameters.get("type").equals("lock")) {
+			}
+			else if (parameters.get("type").equals("lock")) {
 				if (Integer.parseInt(parameters.get("tilex").toString()) == this.tilex
 						&& Integer.parseInt(parameters.get("tiley").toString()) == this.tiley)
 					if (!this.tileState.equals(TileState.RED)) {
 						this.setTileState(tileState.LOCK_NORMAL);
 					}
-			} else if (parameters.get("type").equals("deleteUnit")) {
+			}
+			else if (parameters.get("type").equals("deleteUnit")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
 					this.unitOnTile = null;
@@ -446,7 +460,8 @@ public class Tile extends Observer {
 					//clear the highlight
 					this.resetTileSelected();
 				}
-			} else if (parameters.get("type").equals("rangedUnitAttackHighlight")) {
+			}
+			else if (parameters.get("type").equals("rangedUnitAttackHighlight")) {
 				if (this.unitOnTile != null) {
 					if (this.unitOnTile.getOwner() != GameState.getInstance().getCurrentPlayer()) {
 						this.setTileState(tileState.RED);
@@ -457,10 +472,11 @@ public class Tile extends Observer {
 
 			// second click a tile (already selected a tile with a unit)
 			else if (parameters.get("type").equals("operateUnit")) {
-				Tile originTile = (Tile) parameters.get("originTileSelected");
-				Unit unit = originTile.getUnitOnTile();
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+
+					Tile originTile = (Tile) parameters.get("originTileSelected");
+					Unit unit = originTile.getUnitOnTile();
 
 					// case 1: NORMAL - reset
 					if (this.tileState.equals(tileState.NORMAL)) {

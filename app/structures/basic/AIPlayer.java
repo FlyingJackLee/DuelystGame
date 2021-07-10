@@ -133,7 +133,7 @@ public class AIPlayer extends Player{
             }
         }
         clearTileRecord();
-        try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+        try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
         // AI plays a card
         for(int i = 0; i < 6; i++){
@@ -183,7 +183,10 @@ public class AIPlayer extends Player{
                         }
                         //if it is a spell
                         else {
-
+                            parameters.put("type", "spell");
+                            parameters.put("tilex",y.getTilex());
+                            parameters.put("tiley",y.getTiley());
+                            GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
                         }
                         this.clearTileRecord();

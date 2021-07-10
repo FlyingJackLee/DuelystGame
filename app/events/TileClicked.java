@@ -36,7 +36,6 @@ public class TileClicked implements EventProcessor {
 
 		Map<String,Object> parameters;
 
-
 		if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
 			parameters = new HashMap<>();
 
@@ -53,9 +52,12 @@ public class TileClicked implements EventProcessor {
 			}
 			//if it is a spell
 			else {
-
+				parameters.put("type", "spell");
+				parameters.put("tilex",tilex);
+				parameters.put("tiley",tiley);
+				GameState.getInstance().broadcastEvent(Tile.class,parameters);
 			}
-			}
+		}
 
 		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
 

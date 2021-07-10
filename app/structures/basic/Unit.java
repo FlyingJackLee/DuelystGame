@@ -180,16 +180,20 @@ public class  Unit extends Observer {
 		this.health = health;
 	}
 
-	public void changeHealth(int health) {
-		this.health = health;
-		if (this.health >= 1) {
-			if (this.health > maxHealth) {
-				this.health = maxHealth;
+	public void changeHealth(int health, boolean canTakeOverMax) {
+		//Unit is set to a health bigger than maxHealth
+		if(health > maxHealth){
+			if(canTakeOverMax){
+				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
+			} else {
+				health = maxHealth;
+				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
 			}
-			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
-		} else if (this.health <= 1) {
-			this.health = 0;
-			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, 0);
+		}
+		//Unit dies
+		else if (health <1) {
+			health = 0;
+			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
 			BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
 			BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
 
@@ -208,6 +212,11 @@ public class  Unit extends Observer {
 
 			}
 		}
+
+		else{ // if health is not bigger than max and does not die
+			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
+		}
+		this.setHealth(health);
 	}
 
 	public void changeAttack(int attack) {
@@ -286,7 +295,7 @@ public class  Unit extends Observer {
 		}
 		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
 
-		this.changeHealth(this.getHealth() - attacker.getAttack());
+		this.changeHealth(this.getHealth() - attacker.getAttack(), false);
 
 		// if this unit survives, is allow to counter attack, and the attacker is in the attack range
 		if (allowCounterAttack && this.health >= 1

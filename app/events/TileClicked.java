@@ -9,6 +9,7 @@ import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
+import utils.ToolBox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,11 +48,14 @@ public class TileClicked implements EventProcessor {
 			//if it is a creature
 			if (cardSelected.isCreatureOrSpell() == 1){
 
+				ToolBox.logNotification(ToolBox.currentPlayerName() + " play a card: " + cardSelected.getCardname());
+
 				cardSelected.creatureCardUsed(tilex,tiley);
 
 			}
 			//if it is a spell
 			else {
+				ToolBox.logNotification(ToolBox.currentPlayerName() + " play spell: " + cardSelected.getCardname());
 				parameters.put("type", "spell");
 				parameters.put("tilex",tilex);
 				parameters.put("tiley",tiley);

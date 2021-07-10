@@ -164,7 +164,7 @@ public class AIPlayer extends Player{
 
                             //create unit
                             Unit new_unit = cardSelected.cardToUnit();
-
+                            ToolBox.logNotification("AI summons " + cardSelected.cardname);
                             //summon unit
                             parameters.put("type","summon");
                             parameters.put("tilex",y.getTilex());

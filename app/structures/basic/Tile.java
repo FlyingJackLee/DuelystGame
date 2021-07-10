@@ -358,6 +358,8 @@ public class Tile extends Observer {
 
 								this.attackHighlight();
 
+								GameState.getInstance().setCurrentState(GameState.CurrentState.UNIT_SELECT);
+
 							}
 						}
 					}
@@ -474,12 +476,12 @@ public class Tile extends Observer {
 			else if (parameters.get("type").equals("operateUnit")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
-
 					Tile originTile = (Tile) parameters.get("originTileSelected");
 					Unit unit = originTile.getUnitOnTile();
 
 					// case 1: NORMAL - reset
 					if (this.tileState.equals(tileState.NORMAL)) {
+						ToolBox.logNotification(ToolBox.currentPlayerName() + "cancel unit select!");
 						this.resetTileSelected();
 					}
 
@@ -616,11 +618,14 @@ public class Tile extends Observer {
 		Unit attackedUnit = this.getUnitOnTile();
 		attackerUnit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
 
+		ToolBox.logNotification(ToolBox.currentPlayerName() + ": " + attackerUnit.getId() + " >> " + attackedUnit.getId());
+
 		Map<String, Object> newParameters = new HashMap<>();
 		newParameters.put("type", "attacked");
 		newParameters.put("attackedUnit", attackedUnit);
 		newParameters.put("attackerUnit", attackerUnit);
 		GameState.getInstance().broadcastEvent(Unit.class, newParameters);
+
 
 		// reset the game state
 		resetTileSelected();
@@ -651,6 +656,8 @@ public class Tile extends Observer {
 		} else {
 			BasicCommands.moveUnitToTile(GameState.getInstance().getOut(), unit, this);
 		}
+
+		ToolBox.logNotification(ToolBox.currentPlayerName() + ": " + unit.getId() + " move to (" + this.tilex + "," + this.tiley + ")");
 
 		try {
 			Thread.sleep(2000);
@@ -690,6 +697,7 @@ public class Tile extends Observer {
 	public void resetTileSelected() {
 		// clear the tile selected
 		GameState.getInstance().setTileSelected(null);
+		GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
 
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("type", "textureReset");
@@ -719,7 +727,7 @@ public class Tile extends Observer {
 		// if a tile move 2 steps, and every step in different direction
 		if (distanceOfTiles(this, originTile) == 2) {
 			// check the state of original tile's left or right
-			int checkTileX = this.tilex;
+			int checkTileX = this.getTilex();
 			int checkTileY = originTile.getTiley();
 
 			parameters = new HashMap<>();

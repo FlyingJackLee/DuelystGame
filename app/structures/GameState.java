@@ -6,6 +6,7 @@ import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
 import structures.basic.AIPlayer;
+import utils.ToolBox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -92,6 +93,7 @@ public class GameState extends Subject {
             //clear mana of previous player
             this.currentPlayer.setMana(0);
             this.currentPlayer = playerContainers[1];
+            ToolBox.logNotification("AI's turn.(PLEASE DO NOT OPERATE)");
 
 
         }
@@ -99,6 +101,7 @@ public class GameState extends Subject {
             //clear mana of previous player
             this.currentPlayer.setMana(0);
             this.currentPlayer = playerContainers[0];
+            ToolBox.logNotification("Your turn(You can operate now)");
         }
 
         //update turn and mana

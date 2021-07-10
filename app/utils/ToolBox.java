@@ -49,6 +49,15 @@ public class ToolBox {
         return -1;
     }
 
+    public static String currentPlayerName(){
+        if (GameState.getInstance().getCurrentPlayer().isHumanOrAI()){
+            return "Human Avatar";
+        }
+        else {
+            return "AI Avatar";
+        }
+    }
+
     public static String getRules(Card card){
         String[] rule_lines = card.getBigCard().getRulesTextRows();
         String rules = "";

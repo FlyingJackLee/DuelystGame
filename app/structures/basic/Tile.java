@@ -28,7 +28,7 @@ public class Tile extends Observer {
 
 	enum TileState {
 
-		NORMAL("normal", 0), WHITE("white", 1), RED("red", 2), LOCK_NORMAL("lock", 0);
+		NORMAL("normal", 0), WHITE("white", 1), RED("red", 2);
 
 		private String name;
 		private int mode;
@@ -345,9 +345,9 @@ public class Tile extends Observer {
 								// if the unit this tile has ranged attack ability
 								if (this.unitOnTile.rangedAttack) { // if the unit have ranged attack ability
 									allBroadcast("attackHighlight");
-									this.moveHighlight();
+									this.moveHighlight(0);
 								} else {
-									this.moveHighlight();
+									this.moveHighlight(0);
 									this.attackHighlight();
 								}
 								GameState.getInstance().setCurrentState(GameState.CurrentState.UNIT_SELECT);
@@ -371,10 +371,13 @@ public class Tile extends Observer {
 
 					if (this.unitOnTile == null && this.tileState == tileState.NORMAL) {
 						GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
-						this.setTileState(tileState.WHITE);
-
-						// set the tile highlight which the unit can attack after moving
-						this.attackHighlight();
+						if(parameters.get("count") != null){
+							this.setTileState(tileState.WHITE);
+							int count = Integer.parseInt(String.valueOf(parameters.get("count")));
+							this.moveHighlight(count);
+							// set the tile highlight which the unit can attack after moving
+							this.attackHighlight();
+						}
 					}
 				}
 			}
@@ -386,39 +389,9 @@ public class Tile extends Observer {
 						if (!this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())
 								&& this.tileState == tileState.NORMAL) {
 							this.setTileState(tileState.RED);
-
-							//Check if the tile is adjacent to the selectedTile.
-							Tile selectedTile = GameState.getInstance().getTileSelected();
-							Map<String, Object> newParameters = new HashMap<>();
-
-							int[] offsetx = {-1, 0, 0, 1};
-							int[] offsety = {0, -1, 1, 0};
-							int[] offsetNewx = {-2, 0, 0, 2};
-							int[] offsetNewy = {0, -2, 2, 0};
-							for (int i = 0; i < offsetx.length; i++) {
-								//if it is adjacent tile, lock the movable tiles behind it.
-								if (tilex == selectedTile.getTilex() + offsetx[i] &&
-										tiley == selectedTile.getTiley() + offsety[i]) {
-									int newTilex = selectedTile.getTilex() + offsetNewx[i];
-									int newTiley = selectedTile.getTiley() + offsetNewy[i];
-									if (newTilex >= 0 && newTiley >= 0) {
-										newParameters.put("type", "lock");
-										newParameters.put("tilex", newTilex);
-										newParameters.put("tiley", newTiley);
-										GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-									}
-								}
-							}
 						}
 					}
 				}
-			}
-			else if (parameters.get("type").equals("lock")) {
-				if (Integer.parseInt(parameters.get("tilex").toString()) == this.tilex
-						&& Integer.parseInt(parameters.get("tiley").toString()) == this.tiley)
-					if (!this.tileState.equals(TileState.RED)) {
-						this.setTileState(tileState.LOCK_NORMAL);
-					}
 			}
 			else if (parameters.get("type").equals("deleteUnit")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
@@ -550,17 +523,18 @@ public class Tile extends Observer {
 				}
 
 			}
-			else if (parameters.get("type").equals("checkMoveVertically")
-					&& Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
-					&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
-				Tile originTile = (Tile) parameters.get("originTile");
-				Tile aimTile = (Tile) parameters.get("aimTile");
+			else if (parameters.get("type").equals("checkMoveVertically")){
+				if(Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
+						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
+					Tile originTile = (Tile) parameters.get("originTile");
+					Tile aimTile = (Tile) parameters.get("aimTile");
 
-				// if state is NORMAL, means can't move to aim tile by old route
-				if (this.tileState.equals(tileState.NORMAL)) {
-					aimTile.move(originTile.getUnitOnTile(), originTile, true);
-				} else {
-					aimTile.move(originTile.getUnitOnTile(), originTile, false);
+					// if state is NORMAL, means can't move to aim tile by old route
+					if (this.tileState.equals(tileState.NORMAL)) {
+						aimTile.move(originTile.getUnitOnTile(), originTile, true);
+					} else {
+						aimTile.move(originTile.getUnitOnTile(), originTile, false);
+					}
 				}
 
 			}
@@ -569,12 +543,16 @@ public class Tile extends Observer {
 	}
 
 
-	public void moveHighlight() {
+	public void moveHighlight(int count) {
+		if (count > 1){
+			return;
+		}
 
+		count ++;
 		Map<String, Object> newParameters;
 
-		int[] offsetx = new int[]{1, 1, -1, -1, 0, 0, 2, -2, 0, 0, 1, -1};
-		int[] offsety = new int[]{1, -1, 1, -1, 2, -2, 0, 0, 1, -1, 0, 0};
+		int[] offsetx = new int[]{ 0, 1,-1, 0};
+		int[] offsety = new int[]{ 1, 0, 0,-1};
 
 		for (int i = 0; i < offsetx.length; i++) {
 
@@ -586,6 +564,7 @@ public class Tile extends Observer {
 				newParameters.put("type", "moveHighlight");
 				newParameters.put("tilex", newTileX);
 				newParameters.put("tiley", newTileY);
+				newParameters.put("count",count);
 				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 			}
 		}
@@ -739,5 +718,14 @@ public class Tile extends Observer {
 			GameState.getInstance().broadcastEvent(Tile.class, parameters);
 		} else this.move(originTile.getUnitOnTile(), originTile, false);
 
+	}
+
+	public void clearBlockHighlight(){
+		Map<String, Object> parameters;
+
+		parameters = new HashMap<>();
+		parameters.put("type", "clearBlockHighlight");
+		parameters.put("originTile",this);
+		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 	}
 }

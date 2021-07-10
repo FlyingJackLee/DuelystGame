@@ -198,13 +198,13 @@ public class  Unit extends Observer {
 			newParameters.put("tilex", this.getPosition().getTilex());
 			newParameters.put("tiley", this.getPosition().getTiley());
 			GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-			if (this.getId() == 99) {
+			if (this.getId() == 100) {
 				ToolBox.logNotification("Congratulations, You Win!!!");
-				try {Thread.sleep(10000000);} catch (InterruptedException e) {e.printStackTrace();}
+				try {Thread.sleep(100000000);} catch (InterruptedException e) {e.printStackTrace();}
 			}
-			else if (this.getId() == 100) {
-				ToolBox.logNotification("Unfortunately, You Lost > <");
-				try {Thread.sleep(10000000);} catch (InterruptedException e) {e.printStackTrace();}
+			else if (this.getId() == 99) {
+				ToolBox.logNotification("Unfortunately, You Lost > <!!!");
+				try {Thread.sleep(100000000);} catch (InterruptedException e) {e.printStackTrace();}
 
 			}
 		}

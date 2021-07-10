@@ -10,6 +10,7 @@ import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
 import utils.StaticConfFiles;
+import utils.ToolBox;
 
 
 /**
@@ -49,6 +50,7 @@ public class Tile extends Observer {
 	public void setTileState(TileState tileState) {
 
 		this.tileState = tileState;
+
 		//render the frontend
 		BasicCommands.drawTile(GameState.getInstance().getOut(), this, this.tileState.mode);
 
@@ -230,8 +232,12 @@ public class Tile extends Observer {
 					if (this.unitOnTile == null) {
 						//Change the  texture state
 						this.setTileState(TileState.WHITE);
-						return;
+
+						try {
+							Thread.sleep(10);
+						}catch (InterruptedException e){e.printStackTrace();}
 					}
+					return;
 				}
 
 
@@ -309,6 +315,8 @@ public class Tile extends Observer {
 					if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
 						GameState.getInstance().getCurrentPlayer().removeCardFromHand(GameState.getInstance().getCardSelected());
 					}
+
+					unit.displayAttackAndHealth();
 
 				}
 			}
@@ -508,16 +516,6 @@ public class Tile extends Observer {
 
 					}
 
-				}
-			}
-			else if (parameters.get("range").equals("all_friends")
-					&& !this.unitOnTile.getOwner().isHumanOrAI()) {
-				AIPlayer aiPlayer = (AIPlayer) GameState.getInstance().getCurrentPlayer();
-				aiPlayer.addToOptionalTile(this);
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 			}
 			else if (parameters.get("type").equals("deleteUnit")) {

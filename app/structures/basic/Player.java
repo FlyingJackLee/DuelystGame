@@ -204,11 +204,21 @@ public class Player {
 			//highlight valid tiles
 			showValidRange(cardSelected);
 
+			//Callback Point: <CardSelectedCallBacks>
+			//call all call backs when card used
+			int id = cardSelected.id;
+			if (GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)) != null){
+				//call the callback
+				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
+			}
+
+
 		}
 		else {
 			if(this.isHumanOrAI()){
 				ToolBox.logNotification("Mana not enough");
 			}
+
 			return;
 		}
 

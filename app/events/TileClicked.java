@@ -58,6 +58,7 @@ public class TileClicked implements EventProcessor {
 			}
 
 		else if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.READY)){
+
 			parameters = new HashMap<>();
 			parameters.put("type","firstClickTile");
 			parameters.put("tilex",tilex);

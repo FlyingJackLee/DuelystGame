@@ -137,6 +137,7 @@ public class Card {
 		if (GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)) != null){
 			//call the callback
 			GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)).apply(id);
+
 		}
 
 		Map<String,Object> parameters = new HashMap<>();
@@ -150,12 +151,6 @@ public class Card {
 		parameters.put("unit",unit);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
-
-
-		//set attack and health
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId",this.getId());
 
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 

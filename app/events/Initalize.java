@@ -33,12 +33,10 @@ public class Initalize implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		// clear instance
-		GameState.getInstance().clearObservers();
 
 		//clear the instance
 		GameState.getInstance().clearObservers();
-		//CheckMoveLogic.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
+//		CheckMoveLogic.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
 		// 1.generate tiles
 		for (int i = 0; i < 9; i++) {
@@ -113,7 +111,11 @@ public class Initalize implements EventProcessor {
 		);
 
 		humanAvatar.setOwner(humanPlayer);
+		//4.1 set attack/health of humanAvatar
+		humanAvatar.setAttack(2);
+		humanAvatar.setHealth(20);
 		humanAvatar.setMaxHealth(20);
+
 
 		GameState.getInstance().add(humanAvatar);
 		humanAvatar.setOwner(humanPlayer);
@@ -131,30 +133,20 @@ public class Initalize implements EventProcessor {
 		GameState.getInstance().add(AiAvatar);
 
 		AiAvatar.setOwner(AIPlayer);
+		// 4.2 set attack/health of AIAvatar
+		AiAvatar.setAttack(2);
+		AiAvatar.setHealth(20);
 		AiAvatar.setMaxHealth(20);
+
+
+
 		parameters = new HashMap<>();
 		parameters.put("type", "summon");
 		parameters.put("tilex", 7);
 		parameters.put("tiley", 2);
-		parameters.put("unit", AIAvatar);
+		parameters.put("unit", AiAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
-		//4.1 set attack/health of humanAvatar
-		humanAvatar.setAttack(2);
-		humanAvatar.setHealth(20);
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId",ToolBox.humanAvatarId);
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-
-		// 4.2 set attack/health of AIAvatar
-		AIAvatar.setAttack(2);
-		AIAvatar.setHealth(20);
-		parameters = new HashMap<>();
-		parameters.put("type","setUnit");
-		parameters.put("unitId",ToolBox.AIAvatarID);
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
 
 
@@ -168,7 +160,7 @@ public class Initalize implements EventProcessor {
 		GameState.getInstance().getCurrentPlayer().drawCard();
 
 
-        //7. AI player draw 3 cards
+		//7. AI player draw 3 cards
 		AIPlayer.drawCard();
 		AIPlayer.drawCard();
 		AIPlayer.drawCard();
@@ -181,6 +173,7 @@ public class Initalize implements EventProcessor {
 
 		//9.register all callback
 		GameState.getInstance().registerCallbacks();
+
 
 	}
 }

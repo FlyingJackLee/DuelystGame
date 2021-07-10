@@ -221,6 +221,7 @@ public class  Unit extends Observer {
 				if (parameters.get("attackedUnit").equals(this)) {
 					Unit attackedUnit = this;
 					Unit attackerUnit = (Unit) parameters.get("attackerUnit");
+
 					//Attack First time, allow counter attack.
 					attackedUnit.attacked(attackerUnit, true);
 

@@ -425,16 +425,16 @@ public class Tile extends Observer {
 						Unit targetUnit = this.unitOnTile;
 						//if this is an enemy unit
 						if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
-							targetUnit.setHealth(targetUnit.getHealth() - 2);
+							targetUnit.changeHealth(targetUnit.getHealth() - 2);
 						} else if (rule.toLowerCase(Locale.ROOT).contains("non-avatar")) {
 							if (targetUnit.getId() < 99) { //if this unit is not an enemy avatar
-								targetUnit.setHealth(0);
+								targetUnit.changeHealth(0);
 							}
 						} else if (rule.toLowerCase(Locale.ROOT).contains("health")) {
-							targetUnit.setHealth(targetUnit.getHealth() + 5);
+							targetUnit.changeHealth(targetUnit.getHealth() + 5);
 						} else if (rule.toLowerCase(Locale.ROOT).contains("gains")) {
 							if (targetUnit.getId() >= 99) { // if this is a friend avatar
-								targetUnit.setAttack(targetUnit.getAttack() + 2);
+								targetUnit.changeAttack(targetUnit.getAttack() + 2);
 							}
 						}
 

@@ -213,6 +213,7 @@ public class GameState extends Subject {
         for (Observer observer:observers){
             observer.trigger(target,parameters);
         }
+
     }
 
 
@@ -261,6 +262,8 @@ public class GameState extends Subject {
 
                 GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
+                ToolBox.logNotification("<Airdrop> activate");
+
                 return true;
             }
         });
@@ -276,6 +279,7 @@ public class GameState extends Subject {
                 parameters.put("airdrop", "activate");
 
                 GameState.getInstance().broadcastEvent(Tile.class, parameters);
+                ToolBox.logNotification("<Airdrop> activate");
 
                 return true;
             }
@@ -283,40 +287,29 @@ public class GameState extends Subject {
 
         // Card: Pureblade Enforcer, id: 2
         // If enemy player cast a spell, gain +1/+1
-        // enemy spell id: 18, 19
-        this.spellCastCallbacks.put(String.valueOf("18"), new Function<Integer, Boolean>() {
+
+        this.spellCastCallbacks.put(String.valueOf("2"), new Function<Integer, Boolean>() {
             @Override
             public Boolean apply(Integer integer) {
 
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("type", "modifyUnit");
-                parameters.put("unitId", 2);
+                parameters.put("unitId", integer);
                 parameters.put("attack", 1);
                 parameters.put("health", 1);
+                parameters.put("limit","enemyTurn");
+
 
                 GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
 
                 return true;
             }
         });
-        this.spellCastCallbacks.put(String.valueOf("19"), new Function<Integer, Boolean>() {
-            @Override
-            public Boolean apply(Integer integer) {
 
-                Map<String, Object> parameters = new HashMap<>();
-                parameters.put("type", "modifyUnit");
-                parameters.put("unitId", 2);
-                parameters.put("attack", 1);
-                parameters.put("health", 1);
-
-                GameState.getInstance().broadcastEvent(Unit.class, parameters);
-
-                return true;
-            }
-        });
 
         // Card: Silverguard Knight, id: 4
-        // If avatar is dealt damage, gain +2/+0
+        // If your avatar is dealt damage, gain +2/+0
         // TODO: Unit Ability: Provoke
         this.avatarAttackCallbacks.put(String.valueOf("99"), new Function<Integer, Boolean>() {
             @Override
@@ -329,6 +322,7 @@ public class GameState extends Subject {
                 parameters.put("health", 0);
 
                 GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
 
                 return true;
             }

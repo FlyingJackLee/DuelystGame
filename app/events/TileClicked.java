@@ -13,6 +13,7 @@ import utils.ToolBox;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a tile.
@@ -48,7 +49,6 @@ public class TileClicked implements EventProcessor {
 			//if it is a creature
 			if (cardSelected.isCreatureOrSpell() == 1){
 
-				ToolBox.logNotification(ToolBox.currentPlayerName() + " play a card: " + cardSelected.getCardname());
 
 				cardSelected.creatureCardUsed(tilex,tiley);
 
@@ -60,6 +60,8 @@ public class TileClicked implements EventProcessor {
 				parameters.put("tilex",tilex);
 				parameters.put("tiley",tiley);
 				GameState.getInstance().broadcastEvent(Tile.class,parameters);
+
+
 			}
 		}
 

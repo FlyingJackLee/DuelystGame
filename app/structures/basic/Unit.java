@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Locale;
 
 import java.util.Map;
+import java.util.function.Function;
+import java.util.Map.Entry;
 
 /**
  * This is a representation of a Unit on the game board.
@@ -269,11 +271,16 @@ public class  Unit extends Observer {
 					int newHealth = this.health + (Integer) parameters.get("health");
 					int newAttack = this.attack + (Integer) parameters.get("attack");
 
-					if (parameters.get("limit") != null
-							&& parameters.get("limit").equals("max")
-							&& newHealth > maxHealth) {
-						ToolBox.logNotification("Cannot exceed the max health");
-						newHealth = maxHealth;
+					if (parameters.get("limit") != null){
+						if ( parameters.get("limit").equals("max") && newHealth > maxHealth)
+						{
+							ToolBox.logNotification("Cannot exceed the max health");
+							newHealth = maxHealth;
+						}
+						//if the modification is intended to call in the enemy turn but it is not.
+						if (parameters.get("limit").equals("enemyTurn") && GameState.getInstance().getCurrentPlayer() == this.owner){
+							return;
+						}
 					}
 
 
@@ -301,11 +308,14 @@ public class  Unit extends Observer {
 	private void attacked(Unit attacker, boolean allowCounterAttack) {
 		// Callback Point: <AvatarAttackCallBacks>
 		// run callbacks when a avatar is attacked
-		int id = this.getId();
-		if (id == 99 || id == 100) {
-			if (GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)) != null) {
+		int id = attacker.getId();
+		if (id == 99) {
+			if (GameState.getInstance().getAvatarAttackCallbacks().size() != 0) {
 				// call the callback
-				GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)).apply(id);
+				for (Entry<String,Function<Integer,Boolean>> entry:GameState.getInstance().getAvatarAttackCallbacks().entrySet()
+					 ) {
+					entry.getValue().apply(Integer.parseInt(entry.getKey()));
+				}
 			}
 		}
 

@@ -102,9 +102,14 @@ public class Card {
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
 				unit.setAttackNum(2);
 				unit.setMoveNum(2);
+				unit.maxAttackNum = 2;
+				unit.maxMoveNum = 2;
 			}else {
 				unit.setAttackNum(1);
-				unit.setMoveNum(1);}
+				unit.setMoveNum(1);
+				unit.maxAttackNum =1;
+				unit.maxMoveNum =1;
+				}
 			
 			if(rule.toLowerCase(Locale.ROOT).contains("provoke")) {
 				unit.setCanProvoke(true);

@@ -479,10 +479,10 @@ public class Tile extends Observer {
 						}
 					}
 
-					//if this is not an empty tile
+					//if this is a tile with attackable unit
 					if (this.tileState.equals(TileState.WHITE)) {
 						Unit targetUnit = this.unitOnTile;
-						//if this is an enemy unit
+						
 						if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
 							targetUnit.changeHealth(targetUnit.getHealth() - 2,false);
 						} else if (rule.toLowerCase(Locale.ROOT).contains("non-avatar")) {
@@ -497,11 +497,12 @@ public class Tile extends Observer {
 							}
 						}
 
+						// remove card from hand
+						if (spellCard != null) {
+							GameState.getInstance().getCurrentPlayer().removeCardFromHand(spellCard);
+						}
 					}
-					// remove card from hand
-					if (spellCard != null) {
-						GameState.getInstance().getCurrentPlayer().removeCardFromHand(spellCard);
-					}
+					
 					//clear the highlight
 					this.resetTileSelected();
 				}

@@ -242,6 +242,8 @@ public class  Unit extends Observer {
 	boolean flying = false; // can move anywhere
 	
 	//By default every unit can only attack and move once each turn
+	int maxAttackNum = 1;
+	int maxMoveNum = 1;
 	int attackNum = 1;
 	int moveNum = 1;
 	
@@ -267,6 +269,8 @@ public class  Unit extends Observer {
 			if (parameters.get("type").equals("unitBeReady")) {
 				if (this.owner == GameState.getInstance().getCurrentPlayer()) {
 					this.currentState = UnitState.READY;
+					this.setAttackNum(this.maxAttackNum);
+					this.setMoveNum(this.maxMoveNum);
 				} else {
 					this.currentState = UnitState.NOT_READY;
 				}

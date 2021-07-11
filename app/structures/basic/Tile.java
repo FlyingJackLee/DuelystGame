@@ -196,7 +196,6 @@ public class Tile extends Observer {
 
 		if (this.getClass().equals(target)) {
 
-
 			//handle 1: find unit(all,avatar,(enemy) unit)
 			if (parameters.get("type").equals("searchUnit")) {
 				//if there is a unit on it
@@ -206,7 +205,7 @@ public class Tile extends Observer {
 							(parameters.get("range").equals("enemy") && this.unitOnTile.getOwner() != GameState.getInstance().getCurrentPlayer())
 									//if we need every unit.
 									|| parameters.get("range").equals("all")
-									//if we need all non-avtar unit and ti is the one.
+									//if we need all non-avtar unit and it is the one.
 									|| (parameters.get("range").equals("non_avatar") && this.unitOnTile.id < 99)
 					) {
 
@@ -221,11 +220,6 @@ public class Tile extends Observer {
 							&& !this.unitOnTile.getOwner().isHumanOrAI()) {
 						AIPlayer aiPlayer = (AIPlayer) GameState.getInstance().getCurrentPlayer();
 						aiPlayer.addToOptionalTile(this);
-						try {
-							Thread.sleep(500);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
 					}
 				}
 

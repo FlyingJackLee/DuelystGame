@@ -12,7 +12,7 @@ Keyi Miao - 2544119k(Email:2544119k@student.gla.ac.uk )
 
 Yifan Liu - 2582395l(Email:2582395l@student.gla.ac.uk)
 
-Yadi Tian - 2546988t(Email:2546988t@student.gla.ac.uk, 2546988t@student.gla.ac.uk  )
+Yadi Tian - 2546988t(Email:2546988T@student.gla.ac.uk, 2546988t@student.gla.ac.uk  )
 
 **NOTICE:**
 

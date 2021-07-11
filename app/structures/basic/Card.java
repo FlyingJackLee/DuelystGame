@@ -92,17 +92,23 @@ public class Card {
 		unit.setAttack(this.bigCard.getAttack());
 		unit.setMaxHealth(this.bigCard.getHealth());
 		
-		//set special abilities
+//set special abilities
 		if(this.getBigCard().getRulesTextRows().length > 0) {
 			String rule = this.getBigCard().getRulesTextRows()[0];
 			if(rule.toLowerCase(Locale.ROOT).contains("ranged")) {
 				unit.rangedAttack = true;
 			}else unit.rangedAttack = false;
-
-			
+				
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
-				unit.attackTwice = true;
-			}else unit.attackTwice = false;
+				unit.setAttackNum(2);
+				unit.setMoveNum(2);
+			}else {
+				unit.setAttackNum(1);
+				unit.setMoveNum(1);}
+			
+			if(rule.toLowerCase(Locale.ROOT).contains("provoke")) {
+				unit.setCanProvoke(true);
+			}else unit.setCanProvoke(false);
 		}
 		
 		return unit;

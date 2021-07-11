@@ -240,7 +240,24 @@ public class  Unit extends Observer {
 
 	boolean rangedAttack = false; // can rangedAttack
 	boolean flying = false; // can move anywhere
-	boolean attackTwice = false; // can attack twice one turn
+		
+	//By default every unit can only attack and move once each turn
+	int attackNum = 1;
+	int moveNum = 1;
+	
+	public int getAttackNum() {return attackNum;}
+	public void setAttackNum(int attackNum) {this.attackNum = attackNum;}
+	
+	public int getMoveNum() {return moveNum;}
+	public void setMoveNum(int moveNum) {this.moveNum = moveNum;}
+	
+	boolean canProvoke = false;
+	public boolean getCanProvoke() {return this.canProvoke;}
+	public void setCanProvoke(boolean canProvoke) {this.canProvoke = canProvoke;}
+	
+	boolean isProvoked = false;
+	public boolean isProvoked() {return isProvoked;}
+	public void setProvoked(boolean isProvoked) {this.isProvoked = isProvoked;}
 
 
 	@Override

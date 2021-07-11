@@ -43,27 +43,4 @@ public class ToolBox {
             return "AI Avatar";
         }
     }
-
-    public static String getRules(Card card){
-        String[] rule_lines = card.getBigCard().getRulesTextRows();
-        String rules = "";
-        for (String rule:rule_lines){
-            rules += rule.toLowerCase(Locale.ROOT);
-
-        }
-        return rules;
-    }
-
-    public static int findNumberInStr(String str){
-        Pattern r = Pattern.compile("\\d{1}");
-        Matcher matcher = r.matcher(str);
-
-        int value = 0;
-
-        if (matcher.find()){
-            value = Integer.parseInt(matcher.group(0));
-        }
-        return value;
-    }
-
 }

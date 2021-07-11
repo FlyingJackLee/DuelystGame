@@ -148,7 +148,7 @@ public class AIPlayer extends Player{
                 parameters = new HashMap<>();
                 parameters.put("type","AI_FindOperateTile");
                 GameState.getInstance().broadcastEvent(Tile.class,parameters);
-                try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+                try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
                 Iterator searchSummon = whiteTileGroup.iterator();
                 while(searchSummon.hasNext()){
@@ -162,25 +162,10 @@ public class AIPlayer extends Player{
                         //if it is a creature
                         if (cardSelected.isCreatureOrSpell() == 1){
 
-                            //create unit
-                            Unit new_unit = cardSelected.cardToUnit();
-                            ToolBox.logNotification("AI summons " + cardSelected.cardname);
-                            //summon unit
-                            parameters.put("type","summon");
-                            parameters.put("tilex",y.getTilex());
-                            parameters.put("tiley",y.getTiley());
-                            parameters.put("card",cardSelected);
-                            parameters.put("unit",new_unit);
-                            GameState.getInstance().broadcastEvent(Tile.class,parameters);
-                            try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+                            ToolBox.logNotification(ToolBox.currentPlayerName() + " play a card: " + cardSelected.getCardname());
 
-                            //set attack and health
-                            parameters = new HashMap<>();
-                            parameters.put("type","setUnit");
-                            parameters.put("unitId",cardSelected.getId());
-                            GameState.getInstance().broadcastEvent(Unit.class,parameters);
-                            try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
-                        }
+                            cardSelected.creatureCardUsed(y.tilex,y.tiley);}
+
                         //if it is a spell
                         else {
                             parameters.put("type", "spell");
@@ -190,7 +175,6 @@ public class AIPlayer extends Player{
 
                         }
                         this.clearTileRecord();
-                        try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
                     }
                     break;
                 }
@@ -205,7 +189,7 @@ public class AIPlayer extends Player{
         GameState.getInstance().switchPlayer();
     }
 
-    public void clearTileRecord(){
+    private void clearTileRecord(){
         this.optionalTiles.clear();
         this.whiteTileGroup.clear();
         this.redTileGroup.clear();

@@ -125,7 +125,11 @@ public class Player {
 		return mana;
 	}
 	public void setMana(int mana) {
-		this.mana = mana;
+		int newMana = mana;
+		if (newMana > 6){
+			newMana = 6;
+		}
+		this.mana = newMana;
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
 	}
 

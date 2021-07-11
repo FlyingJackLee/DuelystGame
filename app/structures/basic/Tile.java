@@ -2,6 +2,7 @@ package structures.basic;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -288,6 +289,9 @@ public class Tile extends Observer {
 					//Change the backend texture state
 					this.setTileState(TileState.NORMAL);
 
+					try {
+						Thread.sleep(10);
+					}catch (InterruptedException e){e.printStackTrace();}
 				}
 			}
 
@@ -302,8 +306,13 @@ public class Tile extends Observer {
 					if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
 						//if it is not a valid tile, terminate
 						if (!this.tileState.equals(TileState.WHITE)) {
+							ToolBox.logNotification("Select a valid tile!");
+
 							return;
 						}
+						ToolBox.logNotification(ToolBox.currentPlayerName() + " play a card: "
+								+ GameState.getInstance().getCardSelected().getCardname());
+
 					}
 
 					Unit unit = (Unit) parameters.get("unit");
@@ -318,12 +327,30 @@ public class Tile extends Observer {
 						e.printStackTrace();
 					}
 
+
+
+
 					//remove from hand
 					if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)) {
 						GameState.getInstance().getCurrentPlayer().removeCardFromHand(GameState.getInstance().getCardSelected());
 					}
 
 					unit.displayAttackAndHealth();
+
+					//Callback Point:<BeforeSummonCallbacks>
+					//run callbacks before summon
+					int id = unit.id;
+					if (GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)) != null){
+						//call the callback
+						GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)).apply(id);
+
+					}
+
+					GameState.getInstance().broadcastEvent(Unit.class,parameters);
+
+					GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
+
+
 
 				}
 			}
@@ -367,10 +394,11 @@ public class Tile extends Observer {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
 
-					if (this.unitOnTile == null && this.tileState == tileState.NORMAL) {
-						GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
+					if (this.unitOnTile == null && this.tileState == TileState.NORMAL) {
 						if(parameters.get("count") != null){
-							this.setTileState(tileState.WHITE);
+							this.setTileState(TileState.WHITE);
+							GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
+
 							int count = Integer.parseInt(String.valueOf(parameters.get("count")));
 							this.moveHighlight(count);
 							// set the tile highlight which the unit can attack after moving
@@ -407,14 +435,13 @@ public class Tile extends Observer {
 					Card spellCard = GameState.getInstance().getCardSelected();
 					String rule = spellCard.getBigCard().getRulesTextRows()[0];
 
-					// Callback Point: <SpellCastCallBacks>
-					// run callbacks when a spell is cast
-					int id = spellCard.getId();
-					// if it is enemy's spell
-					if (id == 18 || id == 19) {
-						if (GameState.getInstance().getSpellCastCallbacks().get(String.valueOf(id)) != null) {
-							// call the callback
-							GameState.getInstance().getSpellCastCallbacks().get(String.valueOf(id)).apply(id);
+					//<<SpellCallbacks> point
+					//call when the spell has been casted
+					if (GameState.getInstance().getSpellCastCallbacks().size() != 0) {
+						// call the callback
+						for (Map.Entry<String, Function<Integer,Boolean>> entry:GameState.getInstance().getSpellCastCallbacks().entrySet()
+						) {
+							entry.getValue().apply(Integer.parseInt(entry.getKey()));
 						}
 					}
 

@@ -131,14 +131,7 @@ public class Card {
 
 	public void creatureCardUsed(int tilex,int tiley){
 
-		//Callback Point:<BeforeSummonCallbacks>
-		//run callbacks before summon
-		int id = this.id;
-		if (GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)) != null){
-			//call the callback
-			GameState.getInstance().getBeforeSummonCallbacks().get(String.valueOf(id)).apply(id);
 
-		}
 
 		Map<String,Object> parameters = new HashMap<>();
 
@@ -150,11 +143,6 @@ public class Card {
 		parameters.put("tiley",tiley);
 		parameters.put("unit",unit);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-
-		GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-		GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
 
 
 	}

@@ -344,10 +344,16 @@ public class Tile extends Observer {
 								if (this.unitOnTile.rangedAttack) { // if the unit have ranged attack ability
 									allBroadcast("attackHighlight");
 									this.moveHighlight(0);
+								}
+
+								// Unit Ability: Flying
+								if (this.unitOnTile.flying) {
+									allBroadcast("moveHighlight");
 								} else {
 									this.moveHighlight(0);
 									this.attackHighlight();
 								}
+
 								GameState.getInstance().setCurrentState(GameState.CurrentState.UNIT_SELECT);
 							}
 							// if the unit has moved, it can't move but can attack, only highlight attack unit
@@ -692,6 +698,7 @@ public class Tile extends Observer {
 		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 	}
 
+	// broadcast to all tiles (ranged attack/flying)
 	public static void allBroadcast(String type) {
 		Map<String, Object> newParameters = new HashMap<>();
 		newParameters.put("type", type);
@@ -699,6 +706,9 @@ public class Tile extends Observer {
 			for (int j = 0; j < 5; j++) {
 				newParameters.put("tilex", i);
 				newParameters.put("tiley", j);
+				if (type.equals("moveHighlight")) {
+					newParameters.put("count", 0);
+				}
 				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 			}
 		}

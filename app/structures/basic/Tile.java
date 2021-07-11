@@ -549,11 +549,11 @@ public class Tile extends Observer {
 
 					// case 3: RED - attack
 					else if (this.tileState.equals(TileState.RED)) {
-						originTile.getMoveableTiles().clear();
 
 						// ranged attack
 						if (unit.rangedAttack) {
 							this.attackedBroadcast(unit);
+							originTile.getMoveableTiles().clear();
 						} //attack directly, no need to move
 
 						// this is a normal unit
@@ -567,6 +567,7 @@ public class Tile extends Observer {
 								if (distanceOfTiles(originTile, this) <= 2) {
 									//attack(unit, this.unitOnTile);
 									this.attackedBroadcast(unit);
+									originTile.getMoveableTiles().clear();
 								}
 
 								// case 3.2.2: automatically move and attack

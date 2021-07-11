@@ -85,13 +85,13 @@ public class AIPlayer extends Player{
                 parameters.put("tilex",tileClicked.getTilex());
                 parameters.put("tiley",tileClicked.getTiley());
                 GameState.getInstance().broadcastEvent(Tile.class,parameters);
-                try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+                try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 
                 // get all of the tile that the AI can click
                 parameters = new HashMap<>();
                 parameters.put("type","AI_FindOperateTile");
                 GameState.getInstance().broadcastEvent(Tile.class,parameters);
-                try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+                try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 
                 // 4. operate Unit
                 if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.UNIT_SELECT)){
@@ -133,7 +133,7 @@ public class AIPlayer extends Player{
         }
         clearTileRecord();
         this.optionalTiles.clear();
-        try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+        try {Thread.sleep(50);} catch (InterruptedException e) {e.printStackTrace();}
 
         // AI plays a card
         AIplay_a_card:
@@ -152,7 +152,6 @@ public class AIPlayer extends Player{
                 try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
                 Iterator searchSummon = whiteTileGroup.iterator();
-                step_2:
                 while(searchSummon.hasNext()){
                     // select a tile
                     Tile y = (Tile) searchSummon.next();
@@ -178,7 +177,8 @@ public class AIPlayer extends Player{
 
                         }
                         this.clearTileRecord();
-                        break step_2;
+                        try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+                        break;
                     }
                 }
             }

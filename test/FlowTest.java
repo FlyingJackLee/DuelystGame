@@ -16,11 +16,6 @@ import structures.basic.Unit;
 
 import java.util.List;
 
-/**
- * 2 * @Author: flyingjack
- * 3 * @Date: 2021/7/11 6:50 pm
- * 4
- */
 public class FlowTest {
 
     private GameState gameState = GameState.getInstance();

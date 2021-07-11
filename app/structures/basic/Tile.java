@@ -1,15 +1,14 @@
 package structures.basic;
 
+import java.io.File;
+import java.util.*;
+import java.util.function.Function;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
 import utils.ToolBox;
-
-import java.io.File;
-import java.util.*;
-import java.util.function.Function;
 
 
 /**

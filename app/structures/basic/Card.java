@@ -99,17 +99,27 @@ public class Card {
 				unit.rangedAttack = true;
 			}else unit.rangedAttack = false;
 
-			
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
 				unit.attackTwice = true;
-			}else unit.attackTwice = false;
-
+			}else {
+				unit.setAttackNum(2);
+				unit.setMoveNum(2);
+			}else {
+				unit.setAttackNum(1);
+				unit.setMoveNum(1);}
+			
+			if(rule.toLowerCase(Locale.ROOT).contains("provoke")) {
+				unit.setCanProvoke(true);
+			}else unit.setCanProvoke(false);
+			
 			if(rule.toLowerCase(Locale.ROOT).contains("flying")) {
 				unit.flying = true;
 			} else {
 				unit.flying = false;
 			}
+			
 		}
+
 		
 		return unit;
 	}

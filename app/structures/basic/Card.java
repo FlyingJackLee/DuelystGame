@@ -103,6 +103,12 @@ public class Card {
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
 				unit.attackTwice = true;
 			}else unit.attackTwice = false;
+
+			if(rule.toLowerCase(Locale.ROOT).contains("flying")) {
+				unit.flying = true;
+			} else {
+				unit.flying = false;
+			}
 		}
 		
 		return unit;

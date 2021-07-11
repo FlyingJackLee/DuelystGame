@@ -7,7 +7,6 @@ import structures.basic.Tile;
 import structures.basic.Unit;
 import structures.basic.AIPlayer;
 import utils.ToolBox;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -32,36 +31,14 @@ public class GameState extends Subject {
     private Map<String,Function<Integer,Boolean>> unitDeathCallbacks  = new HashMap<>();
     //Integer: the id of spell to be cast.
     private Map<String,Function<Integer,Boolean>> spellCastCallbacks = new HashMap<>();
-
-    public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
-        return cardSelectedCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getAvatarAttackCallbacks() {
-        return avatarAttackCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
-        return beforeSummonCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
-        return unitDeathCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getSpellCastCallbacks() {
-        return spellCastCallbacks;
-    }
-
-
     private int turnCount = 0;
-
     private Player[] playerContainers = new Player[2];
 
-    public Player[] getPlayerContainers() {
-        return playerContainers;
-    }
-
+    /**
+     * add players to human player
+     * @param humanPlayer
+     * @param AIPlayer
+     */
     public void addPlayers(Player humanPlayer, Player AIPlayer){
         //make sure only allocate once
         if (playerContainers[0] == null && playerContainers[1] ==null){
@@ -353,4 +330,30 @@ public class GameState extends Subject {
             }
         });
     }
+
+    /**
+     * getter and setter
+     */
+    public Player[] getPlayerContainers() { return playerContainers; }
+
+    public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
+        return cardSelectedCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getAvatarAttackCallbacks() {
+        return avatarAttackCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
+        return beforeSummonCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
+        return unitDeathCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getSpellCastCallbacks() {
+        return spellCastCallbacks;
+    }
+
 }

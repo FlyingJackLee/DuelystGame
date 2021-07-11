@@ -36,7 +36,6 @@ public class Initalize implements EventProcessor {
 
 		//clear the instance
 		GameState.getInstance().clearObservers();
-//		CheckMoveLogic.executeDemo(out); // this executes the command demo, comment out this when implementing your solution
 
 		// 1.generate tiles
 		for (int i = 0; i < 9; i++) {
@@ -48,13 +47,12 @@ public class Initalize implements EventProcessor {
 			}
 		}
 
-
 		// 2.generate players
 		Player humanPlayer = new Player(20, 0);
 
 		Player AIPlayer = new AIPlayer(20, 0);
 
-
+		// 2.1 set player's health
 		BasicCommands.setPlayer1Health(out, humanPlayer);
 		BasicCommands.setPlayer2Health(out, AIPlayer);
 
@@ -97,26 +95,25 @@ public class Initalize implements EventProcessor {
 			AIPlayer.setDeck(card);
 		}
 
-
 		ToolBox.logNotification("Your turn");
-
 
 		Map<String,Object> parameters = new HashMap<>();
 
-
-		//4.creat avatar for both players
+		//4.creat avatar for human player
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.humanAvatar,
 				ToolBox.humanAvatarId,Unit.class
 		);
 
+		// 4.1 set owner of humanAvatar
 		humanAvatar.setOwner(humanPlayer);
-		//4.1 set attack/health of humanAvatar
+
+		// 4.2 set attack/health of humanAvatar
 		humanAvatar.setAttack(2);
 		humanAvatar.setHealth(20);
 		humanAvatar.setMaxHealth(20);
 
-
+		// 4.3 add humanAvatar to the board
 		GameState.getInstance().add(humanAvatar);
 		humanAvatar.setOwner(humanPlayer);
 		parameters = new HashMap<>();
@@ -126,20 +123,22 @@ public class Initalize implements EventProcessor {
 		parameters.put("unit",humanAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
+		//5. creat avatar for AI player
 		Unit AiAvatar = BasicObjectBuilders.loadUnit(
 				StaticConfFiles.aiAvatar,
 				ToolBox.AIAvatarID,Unit.class
 		);
 		GameState.getInstance().add(AiAvatar);
 
+		// 5.1 set owner of AI Avatar
 		AiAvatar.setOwner(AIPlayer);
-		// 4.2 set attack/health of AIAvatar
+
+		// 5.2 set attack/health of AI Avatar
 		AiAvatar.setAttack(2);
 		AiAvatar.setHealth(20);
 		AiAvatar.setMaxHealth(20);
 
-
-
+		// 4.3 add AI Avatar to the board
 		parameters = new HashMap<>();
 		parameters.put("type", "summon");
 		parameters.put("tilex", 7);
@@ -147,31 +146,25 @@ public class Initalize implements EventProcessor {
 		parameters.put("unit", AiAvatar);
 		GameState.getInstance().broadcastEvent(Tile.class, parameters);
 
-
-
-
-		// 5.set players
+		// 6.set players
 		GameState.getInstance().addPlayers(humanPlayer, AIPlayer);
 
-
-		//6.human player draw 3 cards
+		// 7.human player draw 3 cards
 		GameState.getInstance().getCurrentPlayer().drawCard();
 		GameState.getInstance().getCurrentPlayer().drawCard();
 		GameState.getInstance().getCurrentPlayer().drawCard();
 
-
-		//7. AI player draw 3 cards
+		// 8. AI player draw 3 cards
 		AIPlayer.drawCard();
 		AIPlayer.drawCard();
 		AIPlayer.drawCard();
 
-
-		//8.set all unit READY
+		// 9.set all unit READY
 		parameters =  new HashMap<>();
 		parameters.put("type","unitBeReady");
 		GameState.getInstance().broadcastEvent(Unit.class,parameters);
 
-		//9.register all callback
+		// 10.register all callback
 		GameState.getInstance().registerCallbacks();
 
 

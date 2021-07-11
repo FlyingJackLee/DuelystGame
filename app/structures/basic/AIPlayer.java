@@ -1,67 +1,46 @@
 package structures.basic;
-
 import commands.BasicCommands;
 import structures.GameState;
 import utils.ToolBox;
-import structures.basic.Card;
 
 import java.util.*;
 
 public class AIPlayer extends Player{
 
-    @Override
-    public void setMana(int mana) {
-        this.mana = mana;
-        BasicCommands.setPlayer2Mana(GameState.getInstance().getOut(),this);
-    }
-
-    @Override
-    public void setHealth(int health) {
-        this.health = health;
-        BasicCommands.setPlayer2Health(GameState.getInstance().getOut(),this);
-    }
+    // record the units that the AI player can option
+    Set<Tile> optionalTiles = new HashSet<>();
+    // Record the Tile that the AI players can move or summon
+    Set<Tile> whiteTileGroup = new HashSet<>();
+    // Record the Tile that the AI players can attack
+    Set<Tile> redTileGroup = new HashSet<>();
 
     @Override
     public void cardSelected(int handPosition){
-
         Card cardSelected = this.cardsOnHand[handPosition];
 
-
-        //highlight card
         //if the player have selected a card, reset the card highlight firstly
         if ( GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT) ){
             clearSelected();
         }
-
         //set backend
         GameState.getInstance().setCardSelected(cardSelected);
-
-
         //highlight valid tiles
         showValidRange(cardSelected);
-
     }
 
     public AIPlayer(int health, int mana){
         super(health,mana);
     }
 
-
-    // record the units that the AI player can option
-    Set<Tile> optionalTiles = new HashSet<>();
-
     public void addToOptionalTile(Tile tile){ optionalTiles.add(tile);}
-
-    // Record the Tile that the AI players can move or summon
-    Set<Tile> whiteTileGroup = new HashSet<>();
 
     public void addToWhiteGroup(Tile tile){ whiteTileGroup.add(tile);}
 
-    // Record the Tile that the AI players can attack
-    Set<Tile> redTileGroup = new HashSet<>();
-
     public void addToRedGroup(Tile tile){ redTileGroup.add(tile);}
 
+    /**
+     * start AI player
+     */
     public void startUpAIMode(){
         Map<String, Object> parameters;
 
@@ -188,9 +167,27 @@ public class AIPlayer extends Player{
         GameState.getInstance().switchPlayer();
     }
 
-
+    /**
+     * refresh the tile state
+     */
     private void clearTileRecord(){
         this.whiteTileGroup.clear();
         this.redTileGroup.clear();
     }
+
+    /**
+     * getter and setter
+     */
+    @Override
+    public void setMana(int mana) {
+        this.mana = mana;
+        BasicCommands.setPlayer2Mana(GameState.getInstance().getOut(),this);
+    }
+
+    @Override
+    public void setHealth(int health) {
+        this.health = health;
+        BasicCommands.setPlayer2Health(GameState.getInstance().getOut(),this);
+    }
+
 }

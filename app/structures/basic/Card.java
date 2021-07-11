@@ -19,13 +19,9 @@ import java.util.function.BiFunction;
 
 public class Card {
 
-
-
- 	int id;
-
+	int id;
 	String cardname;
 	int manacost;
-
 	MiniCard miniCard;
 	BigCard bigCard;
 
@@ -38,47 +34,16 @@ public class Card {
 		this.manacost = manacost;
 		this.miniCard = miniCard;
 		this.bigCard = bigCard;
-
-
 	}
-
-	public int getId() {
-		return id;
-	}
-	public void setId(int id) {
-		this.id = id;
-	}
-	public String getCardname() {
-		return cardname;
-	}
-	public void setCardname(String cardname) {
-		this.cardname = cardname;
-	}
-	public int getManacost() {
-		return manacost;
-	}
-	public void setManacost(int manacost) {
-		this.manacost = manacost;
-	}
-	public MiniCard getMiniCard() {
-		return miniCard;
-	}
-	public void setMiniCard(MiniCard miniCard) {
-		this.miniCard = miniCard;
-	}
-	public BigCard getBigCard() {
-		return bigCard;
-	}
-	public void setBigCard(BigCard bigCard) {
-		this.bigCard = bigCard;
-	}
-
 
 	public Unit cardToUnit(){
+
 		String unit_path = this.cardname.split(" ")[0].toLowerCase(Locale.ROOT);
+
 		if (this.cardname.split(" ").length > 1 && this.cardname.split(" ")[1].toLowerCase(Locale.ROOT) != ""){
 			unit_path += "_" + this.cardname.split(" ")[1].toLowerCase(Locale.ROOT);
 		}
+
 		unit_path = "conf/gameconfs/units/" + unit_path + ".json";
 
 		//create unit
@@ -97,63 +62,55 @@ public class Card {
 			String rule = this.getBigCard().getRulesTextRows()[0];
 			if(rule.toLowerCase(Locale.ROOT).contains("ranged")) {
 				unit.rangedAttack = true;
-			}else unit.rangedAttack = false;
+			}
+			else unit.rangedAttack = false;
 
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
 				unit.setAttackNum(2);
 				unit.setMoveNum(2);
 				unit.maxAttackNum = 2;
 				unit.maxMoveNum = 2;
-			}else {
+			}
+			else {
 				unit.setAttackNum(1);
 				unit.setMoveNum(1);
 				unit.maxAttackNum =1;
 				unit.maxMoveNum =1;
-				}
+			}
 			
 			if(rule.toLowerCase(Locale.ROOT).contains("provoke")) {
 				unit.setCanProvoke(true);
-			}else unit.setCanProvoke(false);
+			}
+			else {
+				unit.setCanProvoke(false);
+			}
 			
 			if(rule.toLowerCase(Locale.ROOT).contains("flying")) {
 				unit.flying = true;
-			} else {
+			}
+			else {
 				unit.flying = false;
 			}
-			
 		}
-
-		
 		return unit;
 	}
 
-
+	/**
+	 * judge whether a card is spell or unit
+	 * @return int  -1 - this card is spell  1 - this card is a unit
+	 */
 	public int isCreatureOrSpell(){
-
 		//if it is a spell
-		if (this.getBigCard().getAttack() == -1){
-			return -1;
-		}
+		if (this.getBigCard().getAttack() == -1) return -1;
 		//if it is a creature
-		else {
-			return 1;
-		}
-
+		else return 1;
 	}
 
-
-	/*
-	 *
+	/**
 	 * When the creature card is going to use, call this method
-	 *
 	 */
-
 	public void creatureCardUsed(int tilex,int tiley){
-
-
-
 		Map<String,Object> parameters = new HashMap<>();
-
 		Unit unit = this.cardToUnit();
 
 		//summon unit
@@ -162,9 +119,31 @@ public class Card {
 		parameters.put("tiley",tiley);
 		parameters.put("unit",unit);
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-
 	}
+
+	/**
+	 * getter and setter
+	 */
+	public int getId() {return id; }
+
+	public void setId(int id) { this.id = id;}
+
+	public String getCardname() { return cardname;}
+
+	public void setCardname(String cardname) { this.cardname = cardname;}
+
+	public int getManacost() { return manacost; }
+
+	public void setManacost(int manacost) {	this.manacost = manacost; }
+
+	public MiniCard getMiniCard() {	return miniCard;}
+
+	public void setMiniCard(MiniCard miniCard) { this.miniCard = miniCard; }
+
+	public BigCard getBigCard() { return bigCard; }
+
+	public void setBigCard(BigCard bigCard) { this.bigCard = bigCard; }
+
 
 }
 

@@ -28,11 +28,8 @@ public class CardClicked implements EventProcessor {
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
-
 		int handPosition = message.get("position").asInt() - 1;
 
 		GameState.getInstance().getCurrentPlayer().cardSelected(handPosition);
-
-
 	}
 }

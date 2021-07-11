@@ -1,13 +1,8 @@
 package structures.basic;
 
-import akka.util.Helpers;
 import commands.BasicCommands;
-import events.EventProcessor;
-import events.TileClicked;
-import org.ietf.jgss.GSSManager;
 import structures.GameState;
 import utils.ToolBox;
-
 import java.util.*;
 
 /**
@@ -19,59 +14,52 @@ import java.util.*;
  */
 public class Player {
 
+	int health;
+	int mana;
 	private List<Card> deck = new ArrayList<>();
 	protected Card[] cardsOnHand  = new Card[6];
 
-	public void setDeck(Card ...cards) {
-		for (Card card : cards) {
-			this.deck.add(card);
-		}
+	public Player() {
+		super();
+		this.health = 20;
+		this.mana = 0;
 	}
 
+	public Player(int health, int mana) {
+		super();
+		this.health = health;
+		this.mana = mana;
+	}
 
 	/**
-	 *
-	 * check if this player is a human or AI
-	 *
+	 * check whether this player is a human or AI
 	 * @return boolean: true - human; false - AI
 	 */
 	public boolean isHumanOrAI(){
-
-		if (this == GameState.getInstance().getPlayerContainers()[0]){
-			return true;
-		}
-		else {
-			return false;
-		}
+		if (this == GameState.getInstance().getPlayerContainers()[0]) return true;
+		else return false;
 	}
 
-
 	/**
-	 *
 	 * drawCard From deck
-	 *
 	 */
 	public void drawCard(){
 		//WIN/LOSE condition one
 		if (deck.size() == 0) {
 			if (this == GameState.getInstance().getPlayerContainers()[0]){
 				ToolBox.logNotification("AIPlayer has won!");
-
 			}
 			else {
 				ToolBox.logNotification("Human has won!");
 			}
-
 			return;
 		}
-
 
 		int randomInt = new Random().nextInt(deck.size());
 		Card card = this.deck.get(randomInt);
 		this.deck.remove(card);
 
 		int i;
-
 		//find a blank space
 		for (i = 0; i < 6; i++) {
 			if(this.cardsOnHand[i] == null){
@@ -88,65 +76,24 @@ public class Player {
 				break;
 			}
 		}
-
-
 		if (i == 6){
 			//TODO : need to be test.
 			ToolBox.logNotification("You can have more card(exceed 6), discard this card.");
 		}
-
-
 	}
 
-	int health;
-	int mana;
-
-	public Player() {
-		super();
-		this.health = 20;
-		this.mana = 0;
-	}
-
-
-	public Player(int health, int mana) {
-		super();
-		this.health = health;
-		this.mana = mana;
-	}
-
-	public int getHealth() {
-		return health;
-	}
-	public void setHealth(int health) {
-		this.health = health;
-		BasicCommands.setPlayer1Health(GameState.getInstance().getOut(), this);
-	}
-	public int getMana() {
-		return mana;
-	}
-	public void setMana(int mana) {
-		int newMana = mana;
-		if (newMana > 6){
-			newMana = 6;
-		}
-		this.mana = newMana;
-		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
-	}
-
-
-	//clear card from hand
+	/**
+	 * clear card from hand
+	 * @param card - the selected card
+	 */
 	protected void removeCardFromHand(Card card){
-
 		//update the mana
 		this.setMana(mana-card.getManacost());
-
 
 		//clear highlight
 		clearSelected();
 
-
 		int index = ToolBox.findObjectInArray(this.cardsOnHand,card);
-
 
 		if(this.isHumanOrAI()){
 			//remove from hand(backend and frontend)
@@ -160,26 +107,17 @@ public class Player {
 		//remove form gameState
 		GameState.getInstance().setCardSelected(null);
 
-
 		//clear the range
 		Map<String,Object> parameters = new HashMap<>();
 		parameters.put("type","textureReset");
 		GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
-
-
 	}
 
-
 	/**
-	 *
 	 * set the card selected
-	 *
 	 * @param handPosition:  0 ~ 6( at specific position)
 	 */
 	public void cardSelected(int handPosition){
-
-
 		if (handPosition <0 || handPosition > 5 ){
 			return;
 		}
@@ -215,40 +153,35 @@ public class Player {
 				//call the callback
 				GameState.getInstance().getCardSelectedCallbacks().get(String.valueOf(id)).apply(id);
 			}
-
-
 		}
 		else {
 			if(this.isHumanOrAI()){
 				ToolBox.logNotification("Mana not enough");
 			}
-
 			return;
 		}
-
-
 	}
 
+	/**
+	 * clear card selected
+	 */
 	public void clearSelected(){
 		if (GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
-
 			if(this.isHumanOrAI()){
 				BasicCommands.drawCard(GameState.getInstance().getOut(),GameState.getInstance().getCardSelected(),
 						ToolBox.findObjectInArray(cardsOnHand,GameState.getInstance().getCardSelected()) + 1
 						,0);
 			}
-
 			//clear backend
 			GameState.getInstance().setCardSelected(null);
 			GameState.getInstance().setTileSelected(null);
-
-
 		}
-
-
 	}
 
-
+	/**
+	 * show the card could be placed tile
+	 * @param cardSelected
+	 */
 	protected void showValidRange(Card cardSelected){
 		Map<String,Object> parameters = new HashMap<>();
 
@@ -258,7 +191,6 @@ public class Player {
 		//waiting for completion of reset
 		try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
 
-
 		//Calculate the target range of card
 		//if it is a spell
 		if (cardSelected.isCreatureOrSpell() == -1) {
@@ -267,7 +199,6 @@ public class Player {
 			parameters.put("type", "searchUnit");
 			//if the target is a unit
 			if (rule.toLowerCase(Locale.ROOT).contains("unit")) {
-
 				//find all enemy Unit
 				if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
 					parameters.put("range", "enemy");
@@ -288,7 +219,6 @@ public class Player {
 					GameState.getInstance().broadcastEvent(Tile.class, parameters);
 				}
 			}
-
 			//if the target is a avatar
 			else if (rule.toLowerCase(Locale.ROOT).contains("avatar")) {
 				//find current avatar
@@ -298,8 +228,6 @@ public class Player {
 						//ask the tile to give the list of enemy units
 						GameState.getInstance().broadcastEvent(Tile.class, parameters);
 					}
-
-
 				}
 			}
 		}
@@ -320,7 +248,31 @@ public class Player {
 			
 			GameState.getInstance().broadcastEvent(Tile.class,parameters);
 		}
+	}
 
+	/**
+	 * getter and setter
+	 */
+	public void setDeck(Card ...cards) {
+		for (Card card : cards) { this.deck.add(card); }
+	}
+
+	public int getHealth() { return health;	}
+
+	public void setHealth(int health) {
+		this.health = health;
+		BasicCommands.setPlayer1Health(GameState.getInstance().getOut(), this);
+	}
+
+	public int getMana() { return mana; }
+
+	public void setMana(int mana) {
+		int newMana = mana;
+		if (newMana > 6){
+			newMana = 6;
+		}
+		this.mana = newMana;
+		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
 	}
 
 

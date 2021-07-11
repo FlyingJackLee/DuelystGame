@@ -6,11 +6,10 @@ import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
 import utils.ToolBox;
-
 import java.util.HashMap;
-import java.util.Locale;
-
 import java.util.Map;
+import java.util.function.Function;
+import java.util.Map.Entry;
 
 /**
  * This is a representation of a Unit on the game board.
@@ -29,11 +28,32 @@ public class  Unit extends Observer {
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
+	public enum UnitState {
+		//the unit is ready after the next turn of summon
+		NOT_READY, READY, HAS_MOVED, HAS_ATTACKED
+	}
+
 	int id;
 	UnitAnimationType animation;
 	Position position;
 	UnitAnimationSet animations;
 	ImageCorrection correction;
+	private int maxHealth;
+	private UnitState currentState = UnitState.NOT_READY;
+	private Player owner = GameState.getInstance().getCurrentPlayer();
+	private int attack = 0;
+	private int health = 0;
+	boolean rangedAttack = false; // can rangedAttack
+	boolean flying = false; // can move anywhere
+	boolean canProvoke = false;
+	boolean isProvoked = false;
+
+
+	//By default every unit can only attack and move once each turn
+	int maxAttackNum = 1;
+	int maxMoveNum = 1;
+	int attackNum = 1;
+	int moveNum = 1;
 
 	public Unit() {
 	}
@@ -58,7 +78,6 @@ public class  Unit extends Observer {
 		this.animations = animations;
 	}
 
-
 	public Unit(int id, UnitAnimationType animation, Position position, UnitAnimationSet animations,
 				ImageCorrection correction) {
 		super();
@@ -69,6 +88,188 @@ public class  Unit extends Observer {
 		this.correction = correction;
 	}
 
+	/**
+	 * This command sets the position of the Unit to a specified
+	 * tile.
+	 *
+	 * @param tile
+	 */
+	@JsonIgnore
+	public void setPositionByTile(Tile tile) {
+		position = new Position(tile.getXpos(), tile.getYpos(), tile.getTilex(), tile.getTiley());
+	}
+
+	/**
+	 * change the health of unit
+	 * @param health - int: the result health value
+	 * @param canTakeOverMax boolesn: false - can't take over max health, true - could take over max health
+	 */
+	public void changeHealth(int health, boolean canTakeOverMax) {
+		//Unit is set to a health bigger than maxHealth
+		if(health > maxHealth){
+			if(canTakeOverMax){
+				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
+			} else {
+				health = maxHealth;
+				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
+			}
+		}
+		//Unit dies
+		else if (health <1) {
+			// Callback Point: <UnitDeathCallBacks>
+			// run callbacks when a unit is dead
+			int id = this.getId();
+			if (GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)) != null) {
+				// call the callback
+				GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)).apply(id);
+			}
+
+			health = 0;
+			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
+			BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
+			try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+
+			BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
+
+			Map<String, Object> newParameters = new HashMap<>();
+			newParameters.put("type", "deleteUnit");
+			newParameters.put("tilex", this.getPosition().getTilex());
+			newParameters.put("tiley", this.getPosition().getTiley());
+			GameState.getInstance().broadcastEvent(Tile.class, newParameters);
+			if (this.getId() == 100) {
+				ToolBox.logNotification("Congratulations, You Win!!!");
+			}
+			else if (this.getId() == 99) {
+				ToolBox.logNotification("Unfortunately, You Lost > <!!!");
+			}
+		}
+		else{ // if health is not bigger than max and does not die
+			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
+		}
+		this.setHealth(health);
+	}
+
+	/**
+	 * change the attack of unit
+	 * @param attack - int attack value
+	 */
+	public void changeAttack(int attack) {
+		this.attack = attack;
+		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this, this.attack);
+	}
+
+	@Override
+	public void trigger(Class target, Map<String, Object> parameters) {
+		if (this.getClass().equals(target)) {
+			if (parameters.get("type").equals("unitBeReady")) {
+				if (this.owner == GameState.getInstance().getCurrentPlayer()) {
+					this.currentState = UnitState.READY;
+					this.setAttackNum(this.maxAttackNum);
+					this.setMoveNum(this.maxMoveNum);
+				} else {
+					this.currentState = UnitState.NOT_READY;
+				}
+			}
+			else if (parameters.get("type").equals("attacked")) {
+				if (parameters.get("attackedUnit").equals(this)) {
+					Unit attackedUnit = this;
+					Unit attackerUnit = (Unit) parameters.get("attackerUnit");
+
+					//Attack First time, allow counter attack.
+					attackedUnit.attacked(attackerUnit, true);
+				}
+			}
+			//modify a unit(backend and frontend(if it has rendered))
+			else if (parameters.get("type").equals("modifyUnit")) {
+				if (this.id == (Integer) parameters.get("unitId")) {
+					int newHealth = this.health + (Integer) parameters.get("health");
+					int newAttack = this.attack + (Integer) parameters.get("attack");
+
+					if (parameters.get("limit") != null){
+						if ( parameters.get("limit").equals("max") && newHealth > maxHealth)
+						{
+							ToolBox.logNotification("Cannot exceed the max health");
+							newHealth = maxHealth;
+						}
+						//if the modification is intended to call in the enemy turn but it is not.
+						if (parameters.get("limit").equals("enemyTurn") && GameState.getInstance().getCurrentPlayer() == this.owner){
+							return;
+						}
+					}
+					this.setHealth(newHealth);
+					this.setAttack(newAttack);
+					displayAttackAndHealth();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Display the attack and health in the front Page
+	 */
+	protected void displayAttackAndHealth() {
+		BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
+		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this, this.attack);
+	}
+
+	/**
+	 * a unit be attacked
+	 * @param attacker Unit
+	 * @param allowCounterAttack boolean: false - can't count attack times, true - support count attack times
+	 */
+	private void attacked(Unit attacker, boolean allowCounterAttack) {
+		// Callback Point: <AvatarAttackCallBacks>
+		// run callbacks when a avatar is attacked
+		int id = attacker.getId();
+		if (id == 99) {
+			if (GameState.getInstance().getAvatarAttackCallbacks().size() != 0) {
+				// call the callback
+				for (Entry<String,Function<Integer,Boolean>> entry:GameState.getInstance().getAvatarAttackCallbacks().entrySet()
+					 ) {
+					entry.getValue().apply(Integer.parseInt(entry.getKey()));
+				}
+			}
+		}
+		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
+
+		this.changeHealth(this.getHealth() - attacker.getAttack(), false);
+
+		// if this unit survives, is allow to counter attack, and the attacker is in the attack range
+		if (allowCounterAttack && this.health >= 1
+				&& this.targetIsInAttackRange(attacker.getPosition().getTilex(), attacker.getPosition().getTiley())) {
+			attacker.attacked(this, false); //counter attack not allow attack.
+		}
+	}
+
+	/**
+	 * check a target is in attack range, to get it can be defense
+	 * @param tilex int
+	 * @param tiley int
+	 * @return boolean: false - can be defense, true - can be defense
+	 */
+	private boolean targetIsInAttackRange(int tilex, int tiley) {
+		int[] offsetx = new int[]{1, 1, 0, -1, -1, -1, 0, 1};
+		int[] offsety = new int[]{0, 1, 1, 1, 0, -1, -1, -1};
+		for (int i = 0; i < offsetx.length; i++) {
+			int newTileX = this.getPosition().getTilex() + offsetx[i];
+			int newTileY = this.getPosition().getTiley() + offsety[i];
+			if (tilex == newTileX && tiley == newTileY) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * getter and setter
+	 * @return
+	 */
 	public int getId() {
 		return id;
 	}
@@ -109,45 +310,17 @@ public class  Unit extends Observer {
 		this.animations = animations;
 	}
 
-	/**
-	 * This command sets the position of the Unit to a specified
-	 * tile.
-	 *
-	 * @param tile
-	 */
-	@JsonIgnore
-	public void setPositionByTile(Tile tile) {
-		position = new Position(tile.getXpos(), tile.getYpos(), tile.getTilex(), tile.getTiley());
-	}
-
-
-	private int maxHealth;
-
 	public void setMaxHealth(int maxHealth) {
 		this.maxHealth = maxHealth;
 	}
-
-
-	public enum UnitState {
-		//the unit is ready after the next turn of summon
-		NOT_READY, READY, HAS_MOVED, HAS_ATTACKED
-
-	}
-
-
-	private UnitState currentState = UnitState.NOT_READY;
 
 	public void setCurrentState(UnitState currentState) {
 		this.currentState = currentState;
 	}
 
-
-	private Player owner = GameState.getInstance().getCurrentPlayer();
-
 	public UnitState getCurrentState() {
 		return currentState;
 	}
-
 
 	public Player getOwner() {
 		return owner;
@@ -157,20 +330,13 @@ public class  Unit extends Observer {
 		this.owner = owner;
 	}
 
-
-	private int attack = 0;
-
 	public void setAttack(int attack) {
 		this.attack = attack;
 	}
 
-
 	public int getAttack() {
 		return attack;
 	}
-
-
-	private int health = 0;
 
 	public int getHealth() {
 		return health;
@@ -178,144 +344,25 @@ public class  Unit extends Observer {
 
 	public void setHealth(int health) {
 		this.health = health;
-	}
-
-	public void changeHealth(int health, boolean canTakeOverMax) {
-		//Unit is set to a health bigger than maxHealth
-		if(health > maxHealth){
-			if(canTakeOverMax){
-				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
-			} else {
-				health = maxHealth;
-				BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
-			}
-		}
-		//Unit dies
-		else if (health <1) {
-			health = 0;
-			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
-			BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
-			BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
-
-			Map<String, Object> newParameters = new HashMap<>();
-			newParameters.put("type", "deleteUnit");
-			newParameters.put("tilex", this.getPosition().getTilex());
-			newParameters.put("tiley", this.getPosition().getTiley());
-			GameState.getInstance().broadcastEvent(Tile.class, newParameters);
-
-			if (this.getId() == 99) {
-				ToolBox.logNotification("Congratulations, You Win!!!");
-				try {Thread.sleep(10000000);} catch (InterruptedException e) {e.printStackTrace();}
-			}
-			else if (this.getId() == 100) {
-				ToolBox.logNotification("Unfortunately, You Lost > <");
-				try {Thread.sleep(10000000);} catch (InterruptedException e) {e.printStackTrace();}
-			}
-		}
-
-		else{ // if health is not bigger than max and does not die
-			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
-		}
-		this.setHealth(health);
-	}
-
-	public void changeAttack(int attack) {
-		this.attack = attack;
-		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this, this.attack);
-	}
-
-	boolean rangedAttack = false; // can rangedAttack
-	boolean flying = false; // can move anywhere
-	boolean attackTwice = false; // can attack twice one turn
-
-
-	@Override
-	public void trigger(Class target, Map<String, Object> parameters) {
-		if (this.getClass().equals(target)) {
-			if (parameters.get("type").equals("unitBeReady")) {
-				if (this.owner == GameState.getInstance().getCurrentPlayer()) {
-					this.currentState = UnitState.READY;
-				} else {
-					this.currentState = UnitState.NOT_READY;
-				}
-			}
-			else if (parameters.get("type").equals("attacked")) {
-				if (parameters.get("attackedUnit").equals(this)) {
-					Unit attackedUnit = this;
-					Unit attackerUnit = (Unit) parameters.get("attackerUnit");
-
-					//Attack First time, allow counter attack.
-					attackedUnit.attacked(attackerUnit, true);
-
-
-				}
-			}
-
-			//modify a unit(backend and frontend(if it has rendered))
-			else if (parameters.get("type").equals("modifyUnit")) {
-				if (this.id == (Integer) parameters.get("unitId")) {
-					int newHealth = this.health + (Integer) parameters.get("health");
-					int newAttack = this.attack + (Integer) parameters.get("attack");
-
-					if (parameters.get("limit") != null
-							&& parameters.get("limit").equals("max")
-							&& newHealth > maxHealth) {
-						ToolBox.logNotification("Cannot exceed the max health");
-						newHealth = maxHealth;
-					}
-
-
-					this.setHealth(newHealth);
-					this.setAttack(newAttack);
-
-					displayAttackAndHealth();
-
-				}
-
-			}
+		// if it is a avatar, set player's health
+		if (this.getId() == 99 || this.getId() == 100) {
+			this.getOwner().setHealth(health);
 		}
 	}
 
-	/**
-	 * Display the attack and health in the front Page
-	 */
-	public void displayAttackAndHealth() {
-		BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
-		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this, this.attack);
+	public int getAttackNum() {return attackNum;}
 
-	}
+	public void setAttackNum(int attackNum) {this.attackNum = attackNum;}
 
+	public int getMoveNum() {return moveNum;}
 
-	public void attacked(Unit attacker, boolean allowCounterAttack) {
-		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.idle);
+	public void setMoveNum(int moveNum) {this.moveNum = moveNum;}
 
-		this.changeHealth(this.getHealth() - attacker.getAttack(), false);
+	public boolean getCanProvoke() {return this.canProvoke;}
 
-		// if this unit survives, is allow to counter attack, and the attacker is in the attack range
-		if (allowCounterAttack && this.health >= 1
-				&& this.targetIsInAttackRange(attacker.getPosition().getTilex(), attacker.getPosition().getTiley())) {
-			attacker.attacked(this, false); //counter attack not allow attack.
-		}
-	}
+	public void setCanProvoke(boolean canProvoke) {this.canProvoke = canProvoke;}
 
-	public boolean targetIsInAttackRange(int tilex, int tiley) {
-		int[] offsetx = new int[]{1, 1, 0, -1, -1, -1, 0, 1};
-		int[] offsety = new int[]{0, 1, 1, 1, 0, -1, -1, -1};
-		for (int i = 0; i < offsetx.length; i++) {
-			int newTileX = this.getPosition().getTilex() + offsetx[i];
-			int newTileY = this.getPosition().getTiley() + offsety[i];
-			if (tilex == newTileX && tiley == newTileY) {
-				return true;
-			}
-		}
-		return false;
-	}
+	public boolean isProvoked() {return isProvoked;}
 
-
+	public void setProvoked(boolean isProvoked) {this.isProvoked = isProvoked;}
 }

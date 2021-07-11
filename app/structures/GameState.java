@@ -7,7 +7,6 @@ import structures.basic.Tile;
 import structures.basic.Unit;
 import structures.basic.AIPlayer;
 import utils.ToolBox;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,31 +29,16 @@ public class GameState extends Subject {
     private Map<String,Function<Integer,Boolean>> avatarAttackCallbacks  = new HashMap<>();
     //Integer: the id of unit has dead.
     private Map<String,Function<Integer,Boolean>> unitDeathCallbacks  = new HashMap<>();
-
-    public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
-        return cardSelectedCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getAvatarAttackCallbacks() {
-        return avatarAttackCallbacks;
-    }
-
-    public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
-        return beforeSummonCallbacks;
-    }
-    public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
-        return unitDeathCallbacks;
-    }
-
-
+    //Integer: the id of spell to be cast.
+    private Map<String,Function<Integer,Boolean>> spellCastCallbacks = new HashMap<>();
     private int turnCount = 0;
-
     private Player[] playerContainers = new Player[2];
 
-    public Player[] getPlayerContainers() {
-        return playerContainers;
-    }
-
+    /**
+     * add players to human player
+     * @param humanPlayer
+     * @param AIPlayer
+     */
     public void addPlayers(Player humanPlayer, Player AIPlayer){
         //make sure only allocate once
         if (playerContainers[0] == null && playerContainers[1] ==null){
@@ -81,7 +65,7 @@ public class GameState extends Subject {
         // reset texture
         Map<String,Object> parameters =  new HashMap<>();
         parameters.put("type","textureReset");
-        GameState.getInstance().broadcastEvent(Unit.class,parameters);
+        GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
         //draw a card
         this.currentPlayer.drawCard();
@@ -112,10 +96,6 @@ public class GameState extends Subject {
         parameters =  new HashMap<>();
         parameters.put("type","unitBeReady");
         GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-        parameters =  new HashMap<>();
-        parameters.put("type","textureReset");
-        GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
         if(this.currentPlayer.equals(playerContainers[1])){
             ((AIPlayer)playerContainers[1]).startUpAIMode();
@@ -174,12 +154,6 @@ public class GameState extends Subject {
     public Tile getTileSelected() { return tileSelected; }
 
 
-
-    // current turn
-    private int currentTurn;
-    public int getCurrentTurn() { return currentTurn;}
-
-
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI
 
     public void setOut(ActorRef out) {
@@ -216,6 +190,7 @@ public class GameState extends Subject {
         for (Observer observer:observers){
             observer.trigger(target,parameters);
         }
+
     }
 
 
@@ -253,7 +228,6 @@ public class GameState extends Subject {
 
         // Card: Ironcliff Guardian, id: 7
         // Unit Ability: Airdrop
-        // TODO: Unit Ability: Provoke
         this.cardSelectedCallbacks.put(String.valueOf("7"), new Function<Integer, Boolean>() {
             @Override
             public Boolean apply(Integer integer) {
@@ -263,6 +237,8 @@ public class GameState extends Subject {
                 parameters.put("airdrop", "activate");
 
                 GameState.getInstance().broadcastEvent(Tile.class, parameters);
+
+                ToolBox.logNotification("<Airdrop> activate");
 
                 return true;
             }
@@ -279,16 +255,37 @@ public class GameState extends Subject {
                 parameters.put("airdrop", "activate");
 
                 GameState.getInstance().broadcastEvent(Tile.class, parameters);
+                ToolBox.logNotification("<Airdrop> activate");
 
                 return true;
             }
         });
 
-        // TODO: Card: Pureblade Enforcer, id: 2
+        // Card: Pureblade Enforcer, id: 2
+        // If enemy player cast a spell, gain +1/+1
+
+        this.spellCastCallbacks.put(String.valueOf("2"), new Function<Integer, Boolean>() {
+            @Override
+            public Boolean apply(Integer integer) {
+
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("type", "modifyUnit");
+                parameters.put("unitId", integer);
+                parameters.put("attack", 1);
+                parameters.put("health", 1);
+                parameters.put("limit","enemyTurn");
+
+
+                GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+
+                return true;
+            }
+        });
+
 
         // Card: Silverguard Knight, id: 4
-        // If avatar is dealt damage, gain +2/+0
-        // TODO: Unit Ability: Provoke
+        // If your avatar is dealt damage, gain +2/+0
         this.avatarAttackCallbacks.put(String.valueOf("99"), new Function<Integer, Boolean>() {
             @Override
             public Boolean apply(Integer integer) {
@@ -300,6 +297,7 @@ public class GameState extends Subject {
                 parameters.put("health", 0);
 
                 GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
 
                 return true;
             }
@@ -330,4 +328,30 @@ public class GameState extends Subject {
             }
         });
     }
+
+    /**
+     * getter and setter
+     */
+    public Player[] getPlayerContainers() { return playerContainers; }
+
+    public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
+        return cardSelectedCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getAvatarAttackCallbacks() {
+        return avatarAttackCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
+        return beforeSummonCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
+        return unitDeathCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getSpellCastCallbacks() {
+        return spellCastCallbacks;
+    }
+
 }

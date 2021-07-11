@@ -63,7 +63,7 @@ public class GameActor extends AbstractActor {
 		eventProcessors.put("endturnclicked", new EndTurnClicked());
 		eventProcessors.put("otherclicked", new OtherClicked());
 
-		// TODO
+
 		// Initalize a new game state object
 		// gameState = new GameState();
 

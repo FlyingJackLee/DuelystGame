@@ -45,4 +45,8 @@ public abstract class Subject {
      * @param parameters:  extra parameter the observer needs
      */
     public abstract void broadcastEvent(Class target,Map<String,Object> parameters);
+
+    public List<Observer> getObservers() {
+        return observers;
+    }
 }

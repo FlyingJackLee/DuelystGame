@@ -5,11 +5,9 @@ import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.typesafe.sslconfig.ssl.FakeChainedKeyStore;
 import commands.BasicCommands;
 import structures.GameState;
 import structures.Observer;
-import utils.StaticConfFiles;
 import utils.ToolBox;
 
 
@@ -408,6 +406,17 @@ public class Tile extends Observer {
 
 					Card spellCard = GameState.getInstance().getCardSelected();
 					String rule = spellCard.getBigCard().getRulesTextRows()[0];
+
+					// Callback Point: <SpellCastCallBacks>
+					// run callbacks when a spell is cast
+					int id = spellCard.getId();
+					// if it is enemy's spell
+					if (id == 18 || id == 19) {
+						if (GameState.getInstance().getSpellCastCallbacks().get(String.valueOf(id)) != null) {
+							// call the callback
+							GameState.getInstance().getSpellCastCallbacks().get(String.valueOf(id)).apply(id);
+						}
+					}
 
 					//if this is not an empty tile
 					if (this.tileState.equals(tileState.WHITE)) {

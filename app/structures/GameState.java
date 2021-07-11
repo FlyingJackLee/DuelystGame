@@ -30,6 +30,8 @@ public class GameState extends Subject {
     private Map<String,Function<Integer,Boolean>> avatarAttackCallbacks  = new HashMap<>();
     //Integer: the id of unit has dead.
     private Map<String,Function<Integer,Boolean>> unitDeathCallbacks  = new HashMap<>();
+    //Integer: the id of spell to be cast.
+    private Map<String,Function<Integer,Boolean>> spellCastCallbacks = new HashMap<>();
 
     public Map<String, Function<Integer, Boolean>> getCardSelectedCallbacks() {
         return cardSelectedCallbacks;
@@ -42,8 +44,13 @@ public class GameState extends Subject {
     public Map<String, Function<Integer, Boolean>> getBeforeSummonCallbacks() {
         return beforeSummonCallbacks;
     }
+
     public Map<String, Function<Integer, Boolean>> getUnitDeathCallbacks() {
         return unitDeathCallbacks;
+    }
+
+    public Map<String, Function<Integer, Boolean>> getSpellCastCallbacks() {
+        return spellCastCallbacks;
     }
 
 
@@ -284,7 +291,39 @@ public class GameState extends Subject {
             }
         });
 
-        // TODO: Card: Pureblade Enforcer, id: 2
+        // Card: Pureblade Enforcer, id: 2
+        // If enemy player cast a spell, gain +1/+1
+        // enemy spell id: 18, 19
+        this.spellCastCallbacks.put(String.valueOf("18"), new Function<Integer, Boolean>() {
+            @Override
+            public Boolean apply(Integer integer) {
+
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("type", "modifyUnit");
+                parameters.put("unitId", 2);
+                parameters.put("attack", 1);
+                parameters.put("health", 1);
+
+                GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+                return true;
+            }
+        });
+        this.spellCastCallbacks.put(String.valueOf("19"), new Function<Integer, Boolean>() {
+            @Override
+            public Boolean apply(Integer integer) {
+
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("type", "modifyUnit");
+                parameters.put("unitId", 2);
+                parameters.put("attack", 1);
+                parameters.put("health", 1);
+
+                GameState.getInstance().broadcastEvent(Unit.class, parameters);
+
+                return true;
+            }
+        });
 
         // Card: Silverguard Knight, id: 4
         // If avatar is dealt damage, gain +2/+0

@@ -178,6 +178,10 @@ public class  Unit extends Observer {
 
 	public void setHealth(int health) {
 		this.health = health;
+		// if it is a avatar, set player's health
+		if (this.getId() == 99 || this.getId() == 100) {
+			this.getOwner().setHealth(health);
+		}
 	}
 
 	public void changeHealth(int health, boolean canTakeOverMax) {
@@ -192,6 +196,14 @@ public class  Unit extends Observer {
 		}
 		//Unit dies
 		else if (health <1) {
+			// Callback Point: <UnitDeathCallBacks>
+			// run callbacks when a unit is dead
+			int id = this.getId();
+			if (GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)) != null) {
+				// call the callback
+				GameState.getInstance().getUnitDeathCallbacks().get(String.valueOf(id)).apply(id);
+			}
+
 			health = 0;
 			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
 			BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
@@ -287,6 +299,16 @@ public class  Unit extends Observer {
 
 
 	public void attacked(Unit attacker, boolean allowCounterAttack) {
+		// Callback Point: <AvatarAttackCallBacks>
+		// run callbacks when a avatar is attacked
+		int id = this.getId();
+		if (id == 99 || id == 100) {
+			if (GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)) != null) {
+				// call the callback
+				GameState.getInstance().getAvatarAttackCallbacks().get(String.valueOf(id)).apply(id);
+			}
+		}
+
 		BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), attacker, UnitAnimationType.attack);
 		try {
 			Thread.sleep(2000);

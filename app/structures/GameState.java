@@ -88,7 +88,7 @@ public class GameState extends Subject {
         // reset texture
         Map<String,Object> parameters =  new HashMap<>();
         parameters.put("type","textureReset");
-        GameState.getInstance().broadcastEvent(Unit.class,parameters);
+        GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
         //draw a card
         this.currentPlayer.drawCard();
@@ -119,10 +119,6 @@ public class GameState extends Subject {
         parameters =  new HashMap<>();
         parameters.put("type","unitBeReady");
         GameState.getInstance().broadcastEvent(Unit.class,parameters);
-
-        parameters =  new HashMap<>();
-        parameters.put("type","textureReset");
-        GameState.getInstance().broadcastEvent(Tile.class,parameters);
 
         if(this.currentPlayer.equals(playerContainers[1])){
             ((AIPlayer)playerContainers[1]).startUpAIMode();
@@ -179,12 +175,6 @@ public class GameState extends Subject {
 
     public void setTileSelected(Tile tileSelected) { this.tileSelected = tileSelected; }
     public Tile getTileSelected() { return tileSelected; }
-
-
-
-    // current turn
-    private int currentTurn;
-    public int getCurrentTurn() { return currentTurn;}
 
 
     private ActorRef out; // The ActorRef can be used to send messages to the front-end UI

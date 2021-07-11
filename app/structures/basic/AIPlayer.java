@@ -186,6 +186,10 @@ public class AIPlayer extends Player{
 
         this.clearTileRecord();
 
+        closeAIMode();
+    }
+
+    public void closeAIMode(){
         GameState.getInstance().switchPlayer();
     }
 

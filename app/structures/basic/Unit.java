@@ -218,12 +218,10 @@ public class  Unit extends Observer {
 			GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 			if (this.getId() == 100) {
 				ToolBox.logNotification("Congratulations, You Win!!!");
-				try {Thread.sleep(100000000);} catch (InterruptedException e) {e.printStackTrace();}
 			}
 			else if (this.getId() == 99) {
 				ToolBox.logNotification("Unfortunately, You Lost > <!!!");
-				try {Thread.sleep(100000000);} catch (InterruptedException e) {e.printStackTrace();}
-
+				((AIPlayer)GameState.getInstance().getCurrentPlayer()).closeAIMode();
 			}
 		}
 

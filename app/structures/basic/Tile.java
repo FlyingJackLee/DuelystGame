@@ -363,14 +363,15 @@ public class Tile extends Observer {
 					}
 				}
 			}
+			// show the move highlight, and record the highlight tile
 			else if (parameters.get("type").equals("moveHighlight")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
 
-					if (this.unitOnTile == null && this.tileState == tileState.NORMAL) {
-						GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
+					if (this.unitOnTile == null && this.tileState == TileState.NORMAL) {
 						if(parameters.get("count") != null){
-							this.setTileState(tileState.WHITE);
+							this.setTileState(TileState.WHITE);
+							GameState.getInstance().getTileSelected().getMoveableTiles().add(this);
 							int count = Integer.parseInt(String.valueOf(parameters.get("count")));
 							this.moveHighlight(count);
 							// set the tile highlight which the unit can attack after moving
@@ -379,14 +380,16 @@ public class Tile extends Observer {
 					}
 				}
 			}
+
+			// show the attack highlight
 			else if (parameters.get("type").equals("attackHighlight")) {
 				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
 						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
 					// if the unit is enemy unit, highlight the tile to red
 					if (this.unitOnTile != null) {
 						if (!this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())
-								&& this.tileState == tileState.NORMAL) {
-							this.setTileState(tileState.RED);
+								&& this.tileState == TileState.NORMAL) {
+							this.setTileState(TileState.RED);
 						}
 					}
 				}
@@ -419,7 +422,7 @@ public class Tile extends Observer {
 					}
 
 					//if this is not an empty tile
-					if (this.tileState.equals(tileState.WHITE)) {
+					if (this.tileState.equals(TileState.WHITE)) {
 						Unit targetUnit = this.unitOnTile;
 						//if this is an enemy unit
 						if (rule.toLowerCase(Locale.ROOT).contains("enemy")) {
@@ -448,7 +451,7 @@ public class Tile extends Observer {
 			else if (parameters.get("type").equals("rangedUnitAttackHighlight")) {
 				if (this.unitOnTile != null) {
 					if (this.unitOnTile.getOwner() != GameState.getInstance().getCurrentPlayer()) {
-						this.setTileState(tileState.RED);
+						this.setTileState(TileState.RED);
 					}
 				}
 			}
@@ -462,19 +465,19 @@ public class Tile extends Observer {
 					Unit unit = originTile.getUnitOnTile();
 
 					// case 1: NORMAL - reset
-					if (this.tileState.equals(tileState.NORMAL)) {
+					if (this.tileState.equals(TileState.NORMAL)) {
 						ToolBox.logNotification(ToolBox.currentPlayerName() + "cancel unit select!");
 						this.resetTileSelected();
 					}
 
 					// case 2: WHITE - move
-					else if (this.tileState.equals(tileState.WHITE)) {
+					else if (this.tileState.equals(TileState.WHITE)) {
 						// move
 						this.checkMoveVertically(originTile);
 					}
 
 					// case 3: RED - attack
-					else if (this.tileState.equals(tileState.RED)) {
+					else if (this.tileState.equals(TileState.RED)) {
 
 						// ranged attack
 						if (unit.rangedAttack) {
@@ -519,9 +522,9 @@ public class Tile extends Observer {
 				}
 			}
 			else if (parameters.get("type").equals("AI_FindOperateTile")) {
-				if (this.tileState.equals(tileState.WHITE)) {
+				if (this.tileState.equals(TileState.WHITE)) {
 					((AIPlayer) GameState.getInstance().getCurrentPlayer()).addToWhiteGroup(this);
-				} else if (this.tileState.equals(tileState.RED)) {
+				} else if (this.tileState.equals(TileState.RED)) {
 					((AIPlayer) GameState.getInstance().getCurrentPlayer()).addToRedGroup(this);
 				}
 
@@ -533,7 +536,7 @@ public class Tile extends Observer {
 					Tile aimTile = (Tile) parameters.get("aimTile");
 
 					// if state is NORMAL, means can't move to aim tile by old route
-					if (this.tileState.equals(tileState.NORMAL)) {
+					if (this.tileState.equals(TileState.NORMAL)) {
 						aimTile.move(originTile.getUnitOnTile(), originTile, true);
 					} else {
 						aimTile.move(originTile.getUnitOnTile(), originTile, false);
@@ -546,6 +549,10 @@ public class Tile extends Observer {
 	}
 
 
+	/**
+	 * show the moveable highlight - white
+	 * @param count move step
+	 */
 	private void moveHighlight(int count) {
 		if (count > 1){
 			return;
@@ -568,11 +575,15 @@ public class Tile extends Observer {
 				newParameters.put("tilex", newTileX);
 				newParameters.put("tiley", newTileY);
 				newParameters.put("count",count);
+				newParameters.put("originTile",this);
 				GameState.getInstance().broadcastEvent(Tile.class, newParameters);
 			}
 		}
 	}
 
+	/**
+	 * show the attack highlight - red
+	 */
 	private void attackHighlight() {
 		Map<String, Object> newParameters;
 
@@ -652,6 +663,7 @@ public class Tile extends Observer {
 		unit.setPositionByTile(this);
 		this.setUnitOnTile(unit);
 		originTile.setUnitOnTile(null);
+		originTile.getMoveableTiles().clear();
 
 		// set unit state - HAS_MOVED
 		unit.setCurrentState(Unit.UnitState.HAS_MOVED);
@@ -672,10 +684,12 @@ public class Tile extends Observer {
 		int y_1 = tile1.getTiley();
 		int x_2 = tile2.getTilex();
 		int y_2 = tile2.getTiley();
-		int distance = (x_1 - x_2) * (x_1 - x_2) + (y_1 - y_2) * (y_1 - y_2);
-		return distance;
+		return (x_1 - x_2) * (x_1 - x_2) + (y_1 - y_2) * (y_1 - y_2);
 	}
 
+	/**
+	 * reset the state of game state to READY, and clear all highlight
+	 */
 	private void resetTileSelected() {
 		// clear the tile selected
 		GameState.getInstance().setTileSelected(null);
@@ -684,6 +698,7 @@ public class Tile extends Observer {
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("type", "textureReset");
 		GameState.getInstance().broadcastEvent(Tile.class, parameters);
+
 	}
 
 	private static void allBroadcast(String type) {

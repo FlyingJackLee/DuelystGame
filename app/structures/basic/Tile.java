@@ -525,8 +525,20 @@ public class Tile extends Observer {
 
 					// case 1: NORMAL - reset
 					if (this.tileState.equals(TileState.NORMAL)) {
-						ToolBox.logNotification(ToolBox.currentPlayerName() + "cancel unit select!");
-						this.resetTileSelected();
+						if(this.unitOnTile != null && this.unitOnTile.getOwner().equals(GameState.getInstance().getCurrentPlayer())){
+							this.resetTileSelected();
+							this.moveableTiles.clear();
+
+							parameters = new HashMap<>();
+							parameters.put("type","firstClickTile");
+							parameters.put("tilex",this.tilex);
+							parameters.put("tiley",this.tiley);
+							GameState.getInstance().broadcastEvent(Tile.class,parameters);
+						}
+						else {
+							ToolBox.logNotification(ToolBox.currentPlayerName() + "cancel unit select!");
+							this.resetTileSelected();
+						}
 					}
 
 					// case 2: WHITE - move
@@ -537,6 +549,7 @@ public class Tile extends Observer {
 
 					// case 3: RED - attack
 					else if (this.tileState.equals(TileState.RED)) {
+						originTile.getMoveableTiles().clear();
 
 						// ranged attack
 						if (unit.rangedAttack) {
@@ -747,9 +760,6 @@ public class Tile extends Observer {
 		unit.setPositionByTile(this);
 		this.setUnitOnTile(unit);
 		originTile.setUnitOnTile(null);
-		originTile.getMoveableTiles().clear();
-
-		// reset game state
 		originTile.getMoveableTiles().clear();
 
 		// set unit state - HAS_MOVED

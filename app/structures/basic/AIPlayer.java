@@ -99,6 +99,7 @@ public class AIPlayer extends Player{
                         // 4.1 if the unit can attack, attack firstly
                         Iterator searchAttack = this.redTileGroup.iterator();
                         while (searchAttack.hasNext()) {
+                            // choose a tile
                             Tile y = (Tile) searchAttack.next();
                             parameters = new HashMap<>();
                             parameters.put("type", "operateUnit");
@@ -106,11 +107,8 @@ public class AIPlayer extends Player{
                             parameters.put("tiley", y.getTiley());
                             parameters.put("originTileSelected", tileClicked);
                             GameState.getInstance().broadcastEvent(Tile.class, parameters);
-                            try {
-                                Thread.sleep(2000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                            try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+                            clearTileRecord();
                             break;
                         }
                     }
@@ -126,6 +124,7 @@ public class AIPlayer extends Player{
                             parameters.put("originTileSelected", tileClicked);
                             GameState.getInstance().broadcastEvent(Tile.class,parameters);
                             try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+                            clearTileRecord();
                             break;
                         }
                     }
@@ -133,16 +132,18 @@ public class AIPlayer extends Player{
             }
         }
         clearTileRecord();
+        this.optionalTiles.clear();
         try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
         // AI plays a card
+        AIplay_a_card:
         for(int i = 0; i < 6; i++){
             if(this.cardsOnHand[i] != null){
                 // 1. chose a card
                 if(this.cardsOnHand[i].getManacost() <= this.mana){
                     this.cardSelected(i);
                 }
-                else {continue;}
+                else {continue AIplay_a_card; }
 
                 // 2. find the placeable tile
                 parameters = new HashMap<>();
@@ -151,7 +152,9 @@ public class AIPlayer extends Player{
                 try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
 
                 Iterator searchSummon = whiteTileGroup.iterator();
+                step_2:
                 while(searchSummon.hasNext()){
+                    // select a tile
                     Tile y = (Tile) searchSummon.next();
                     if(GameState.getInstance().getCurrentState().equals(GameState.CurrentState.CARD_SELECT)){
                         parameters = new HashMap<>();
@@ -175,26 +178,18 @@ public class AIPlayer extends Player{
 
                         }
                         this.clearTileRecord();
+                        break step_2;
                     }
-                    break;
                 }
             }
         }
-
-        parameters.put("type","textureReset");
-        GameState.getInstance().broadcastEvent(Tile.class,parameters);
-
         this.clearTileRecord();
 
-        closeAIMode();
-    }
-
-    public void closeAIMode(){
         GameState.getInstance().switchPlayer();
     }
 
+
     private void clearTileRecord(){
-        this.optionalTiles.clear();
         this.whiteTileGroup.clear();
         this.redTileGroup.clear();
     }

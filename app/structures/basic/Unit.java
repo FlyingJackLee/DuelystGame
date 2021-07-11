@@ -223,7 +223,6 @@ public class  Unit extends Observer {
 			}
 			else if (this.getId() == 99) {
 				ToolBox.logNotification("Unfortunately, You Lost > <!!!");
-				((AIPlayer)GameState.getInstance().getCurrentPlayer()).closeAIMode();
 			}
 		}
 

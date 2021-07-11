@@ -149,15 +149,23 @@ public class Initalize implements EventProcessor {
 		// 6.set players
 		GameState.getInstance().addPlayers(humanPlayer, AIPlayer);
 
-		// 7.human player draw 3 cards
-		GameState.getInstance().getCurrentPlayer().drawCard();
-		GameState.getInstance().getCurrentPlayer().drawCard();
-		GameState.getInstance().getCurrentPlayer().drawCard();
+		if (message.get("mode") != null && message.get("mode").asText().equals("test")){
+			//this is only available for test
+			//do noting
+			System.out.println("---Test mode activate---");
+		}
+		else {
+			// 7.human player draw 3 cards
+			GameState.getInstance().getCurrentPlayer().drawCard();
+			GameState.getInstance().getCurrentPlayer().drawCard();
+			GameState.getInstance().getCurrentPlayer().drawCard();
 
-		// 8. AI player draw 3 cards
-		AIPlayer.drawCard();
-		AIPlayer.drawCard();
-		AIPlayer.drawCard();
+			// 8. AI player draw 3 cards
+			AIPlayer.drawCard();
+			AIPlayer.drawCard();
+			AIPlayer.drawCard();
+		}
+
 
 		// 9.set all unit READY
 		parameters =  new HashMap<>();

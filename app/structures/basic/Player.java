@@ -275,6 +275,14 @@ public class Player {
 		BasicCommands.setPlayer1Mana(GameState.getInstance().getOut(), this);
 	}
 
+	public List<Card> getDeck() {
+		return deck;
+	}
+
+	public Card[] getCardsOnHand() {
+		return cardsOnHand;
+	}
+
 
 }
 

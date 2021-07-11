@@ -28,7 +28,7 @@ public class  Unit extends Observer {
 	@JsonIgnore
 	protected static ObjectMapper mapper = new ObjectMapper(); // Jackson Java Object Serializer, is used to read java objects from a file
 
-	enum UnitState {
+	public enum UnitState {
 		//the unit is ready after the next turn of summon
 		NOT_READY, READY, HAS_MOVED, HAS_ATTACKED
 	}

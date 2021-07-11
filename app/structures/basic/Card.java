@@ -100,8 +100,6 @@ public class Card {
 			}else unit.rangedAttack = false;
 
 			if(rule.toLowerCase(Locale.ROOT).contains("twice")) {
-				unit.attackTwice = true;
-			}else {
 				unit.setAttackNum(2);
 				unit.setMoveNum(2);
 			}else {

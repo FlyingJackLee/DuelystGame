@@ -131,7 +131,7 @@ public class Player {
 
 
 	//clear card from hand
-	public void removeCardFromHand(Card card){
+	protected void removeCardFromHand(Card card){
 
 		//update the mana
 		this.setMana(mana-card.getManacost());
@@ -245,7 +245,7 @@ public class Player {
 	}
 
 
-	public void showValidRange(Card cardSelected){
+	protected void showValidRange(Card cardSelected){
 		Map<String,Object> parameters = new HashMap<>();
 
 		parameters.put("type","textureReset");

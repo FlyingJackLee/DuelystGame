@@ -524,12 +524,6 @@ public class Tile extends Observer {
 
 				}
 			}
-			else if (parameters.get("type").equals("deleteUnit")) {
-				if (Integer.parseInt(String.valueOf(parameters.get("tilex"))) == this.tilex
-						&& Integer.parseInt(String.valueOf(parameters.get("tiley"))) == this.tiley) {
-					this.unitOnTile = null;
-				}
-			}
 			else if (parameters.get("type").equals("AI_FindOperateTile")) {
 				if (this.tileState.equals(tileState.WHITE)) {
 					((AIPlayer) GameState.getInstance().getCurrentPlayer()).addToWhiteGroup(this);
@@ -558,7 +552,7 @@ public class Tile extends Observer {
 	}
 
 
-	public void moveHighlight(int count) {
+	private void moveHighlight(int count) {
 		if (count > 1){
 			return;
 		}
@@ -585,7 +579,7 @@ public class Tile extends Observer {
 		}
 	}
 
-	public void attackHighlight() {
+	private void attackHighlight() {
 		Map<String, Object> newParameters;
 
 		int[] offsetx = new int[]{1, 1, 0, -1, -1, -1, 0, 1};
@@ -607,7 +601,7 @@ public class Tile extends Observer {
 
 	}
 
-	public void attackedBroadcast(Unit attackerUnit) {
+	private void attackedBroadcast(Unit attackerUnit) {
 		// set unit state - HAS_ATTACKED
 		Unit attackedUnit = this.getUnitOnTile();
 		attackerUnit.setCurrentState(Unit.UnitState.HAS_ATTACKED);
@@ -635,7 +629,7 @@ public class Tile extends Observer {
 	 * @param originTile Tile: tile before moving
 	 * @param mode       boolean false - move horizontally then vertically, true - vertically then horizontally
 	 */
-	public void move(Unit unit, Tile originTile, boolean mode) {
+	private void move(Unit unit, Tile originTile, boolean mode) {
 		// clear highlight
 		resetTileSelected();
 		try {
@@ -679,7 +673,7 @@ public class Tile extends Observer {
 	 * @param tile2
 	 * @return square of distance
 	 */
-	public int distanceOfTiles(Tile tile1, Tile tile2) {
+	private int distanceOfTiles(Tile tile1, Tile tile2) {
 		int x_1 = tile1.getTilex();
 		int y_1 = tile1.getTiley();
 		int x_2 = tile2.getTilex();
@@ -688,7 +682,7 @@ public class Tile extends Observer {
 		return distance;
 	}
 
-	public void resetTileSelected() {
+	private void resetTileSelected() {
 		// clear the tile selected
 		GameState.getInstance().setTileSelected(null);
 		GameState.getInstance().setCurrentState(GameState.CurrentState.READY);
@@ -699,7 +693,7 @@ public class Tile extends Observer {
 	}
 
 	// broadcast to all tiles (ranged attack/flying)
-	public static void allBroadcast(String type) {
+	private static void allBroadcast(String type) {
 		Map<String, Object> newParameters = new HashMap<>();
 		newParameters.put("type", type);
 		for (int i = 0; i < 9; i++) {
@@ -719,7 +713,7 @@ public class Tile extends Observer {
 	 *
 	 * @param originTile
 	 */
-	public void checkMoveVertically(Tile originTile) {
+	private void checkMoveVertically(Tile originTile) {
 		Map<String, Object> parameters;
 
 		// if a tile move 2 steps, and every step in different direction
@@ -737,14 +731,5 @@ public class Tile extends Observer {
 			GameState.getInstance().broadcastEvent(Tile.class, parameters);
 		} else this.move(originTile.getUnitOnTile(), originTile, false);
 
-	}
-
-	public void clearBlockHighlight(){
-		Map<String, Object> parameters;
-
-		parameters = new HashMap<>();
-		parameters.put("type", "clearBlockHighlight");
-		parameters.put("originTile",this);
-		GameState.getInstance().broadcastEvent(Tile.class,parameters);
 	}
 }

@@ -207,6 +207,8 @@ public class  Unit extends Observer {
 			health = 0;
 			BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, health);
 			BasicCommands.playUnitAnimation(GameState.getInstance().getOut(), this, UnitAnimationType.death);
+			try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
+
 			BasicCommands.deleteUnit(GameState.getInstance().getOut(), this);
 
 			Map<String, Object> newParameters = new HashMap<>();
@@ -291,14 +293,14 @@ public class  Unit extends Observer {
 	/**
 	 * Display the attack and health in the front Page
 	 */
-	public void displayAttackAndHealth() {
+	protected void displayAttackAndHealth() {
 		BasicCommands.setUnitHealth(GameState.getInstance().getOut(), this, this.health);
 		BasicCommands.setUnitAttack(GameState.getInstance().getOut(), this, this.attack);
 
 	}
 
 
-	public void attacked(Unit attacker, boolean allowCounterAttack) {
+	private void attacked(Unit attacker, boolean allowCounterAttack) {
 		// Callback Point: <AvatarAttackCallBacks>
 		// run callbacks when a avatar is attacked
 		int id = this.getId();
@@ -326,7 +328,7 @@ public class  Unit extends Observer {
 		}
 	}
 
-	public boolean targetIsInAttackRange(int tilex, int tiley) {
+	private boolean targetIsInAttackRange(int tilex, int tiley) {
 		int[] offsetx = new int[]{1, 1, 0, -1, -1, -1, 0, 1};
 		int[] offsety = new int[]{0, 1, 1, 1, 0, -1, -1, -1};
 		for (int i = 0; i < offsetx.length; i++) {

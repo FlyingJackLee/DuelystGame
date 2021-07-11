@@ -228,7 +228,6 @@ public class GameState extends Subject {
 
         // Card: Ironcliff Guardian, id: 7
         // Unit Ability: Airdrop
-        // TODO: Unit Ability: Provoke
         this.cardSelectedCallbacks.put(String.valueOf("7"), new Function<Integer, Boolean>() {
             @Override
             public Boolean apply(Integer integer) {
@@ -287,7 +286,6 @@ public class GameState extends Subject {
 
         // Card: Silverguard Knight, id: 4
         // If your avatar is dealt damage, gain +2/+0
-        // TODO: Unit Ability: Provoke
         this.avatarAttackCallbacks.put(String.valueOf("99"), new Function<Integer, Boolean>() {
             @Override
             public Boolean apply(Integer integer) {

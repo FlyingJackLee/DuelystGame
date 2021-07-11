@@ -77,7 +77,6 @@ public class Player {
 			}
 		}
 		if (i == 6){
-			//TODO : need to be test.
 			ToolBox.logNotification("You can have more card(exceed 6), discard this card.");
 		}
 	}
